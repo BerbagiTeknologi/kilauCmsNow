@@ -158,56 +158,111 @@
                     </div>
                 </div>
 
-                <div class="row">
+                <!--<div class="row">-->
                     <!-- Grafik Donasi -->
-                    <div class="col-md-6 mt-2">
-                        <h5 class="fw-bold">Grafik Donasi</h5>
-                        <canvas id="donasiChart" width="400" height="200"></canvas>
-                    </div>
+                <!--    <div class="col-md-6 mt-2">-->
+                <!--        <h5 class="fw-bold">Grafik Donasi</h5>-->
+                <!--        <canvas id="donasiChart" width="400" height="200"></canvas>-->
+                <!--    </div>-->
 
                     <!-- Grafik Kunjungan Landing Page -->
+                <!--    <div class="col-md-6 mt-2">-->
+                <!--        <h5 class="fw-bold">Grafik Kunjungan Website Kilau</h5>-->
+                <!--        <canvas id="landingChart" width="400" height="200"></canvas>-->
+                <!--    </div>-->
+                <!--</div>-->
+                
+                <!--<div class="row">-->
+                <!--    {{-- Grafik Donasi (tanpa filter) --}}-->
+                <!--    <div class="col-md-6 mt-2">-->
+                <!--        <h5 class="fw-bold">Grafik Donasi</h5>-->
+                <!--        <canvas id="donasiChart" height="200"></canvas>-->
+                <!--    </div>-->
+                
+                <!--    {{-- Grafik Kunjungan --}}-->
+                <!--    <div class="col-md-6 mt-2">-->
+                <!--        <h5 class="fw-bold">Grafik Kunjungan Website Kilau</h5>-->
+                
+                <!--        {{-- Tombol filter di bawah judul --}}-->
+                <!--        <div id="trafficFilter" class="btn-group btn-group-sm mb-2" role="group">-->
+                <!--            <button class="btn btn-outline-primary active" data-group="daily">Harian</button>-->
+                <!--            <button class="btn btn-outline-primary"           data-group="monthly">Bulanan</button>-->
+                <!--            <button class="btn btn-outline-primary"           data-group="yearly">Tahunan</button>-->
+                <!--        </div>-->
+                
+                <!--        <canvas id="landingChart" height="200"></canvas>-->
+                <!--    </div>-->
+                <!--</div>-->
+                
+                <div class="row">
+
+                    {{-- ===== GRAFIK DONASI ===== --}}
+                    <div class="col-md-6 mt-2">
+                        <h5 class="fw-bold">Grafik Donasi</h5>
+                        <div id="donasiFilter" class="btn-group btn-group-sm mb-2" role="group">
+                            <button class="btn btn-outline-success active" data-group="daily">Harian</button>
+                            <button class="btn btn-outline-success"          data-group="monthly">Bulanan</button>
+                            <button class="btn btn-outline-success"          data-group="yearly">Tahunan</button>
+                        </div>
+                        <canvas id="donasiChart" height="200"></canvas>
+                    </div>
+                
+                    {{-- ===== GRAFIK KUNJUNGAN ===== --}}
                     <div class="col-md-6 mt-2">
                         <h5 class="fw-bold">Grafik Kunjungan Website Kilau</h5>
-                        <canvas id="landingChart" width="400" height="200"></canvas>
+                        <div id="trafficFilter" class="btn-group btn-group-sm mb-2" role="group">
+                            <button class="btn btn-outline-primary active" data-group="daily">Harian</button>
+                            <button class="btn btn-outline-primary"          data-group="monthly">Bulanan</button>
+                            <button class="btn btn-outline-primary"          data-group="yearly">Tahunan</button>
+                        </div>
+                        <canvas id="landingChart" height="200"></canvas>
                     </div>
+                
                 </div>
 
                <div class="col-12 mt-5">
                     <div class="table-responsive">
                         <h6 class="fw-bold mb-3">Rekap & Log Kunjungan (Semua Tipe)</h6>
-
-                         {{-- 👇 new: filter tanggal --}}
+                        
                         <form method="GET" class="row g-2 align-items-end mb-3">
-                            {{-- pertahankan query lain (per_page, pencarian, dll.) --}}
+                            {{-- pertahankan query lainnya --}}
                             @foreach(request()->except('date') as $k => $v)
                                 <input type="hidden" name="{{ $k }}" value="{{ $v }}">
                             @endforeach
-
-                            <div class="col-auto">
-                                <label for="dateFilter" class="form-label mb-0">Filter tanggal</label>
-                                <input type="date"
-                                    id="dateFilter"
-                                    name="date"
-                                    value="{{ request('date') }}"
-                                    class="form-control"
-                                    max="{{ now()->toDateString() }}">
-                            </div>
-
-                            <div class="col-auto">
-                                <button class="btn btn-primary">
-                                    <i class="fas fa-filter me-1"></i> Tampilkan
-                                </button>
-
-                                @if(request()->filled('date'))
-                                    <a href="{{ route('dashboard', request()->except('date')) }}"
-                                    class="btn btn-outline-secondary ms-1">
-                                        Reset
-                                    </a>
-                                @endif
-                            </div>
+                
+                            <!--<div class="col-auto">-->
+                            <!--    <label for="dateFilter" class="form-label mb-0">Filter tanggal</label>-->
+                            <!--    <input type="date"-->
+                            <!--           id="dateFilter"-->
+                            <!--           name="date"-->
+                            <!--           value="{{ request('date') }}"-->
+                            <!--           class="form-control"-->
+                            <!--           max="{{ now()->toDateString() }}">-->
+                            <!--</div>-->
+                
+                            <!--<div class="col-auto">-->
+                            <!--    <button class="btn btn-primary">-->
+                            <!--        <i class="fas fa-filter me-1"></i> Tampilkan-->
+                            <!--    </button>-->
+                
+                            <!--    @if(request()->filled('date'))-->
+                            <!--        <a href="{{ route('dashboard', request()->except('date')) }}"-->
+                            <!--           class="btn btn-outline-secondary ms-1">-->
+                            <!--            Reset-->
+                            <!--        </a>-->
+                            <!--    @endif-->
+                            <!--</div>-->
                         </form>
                 
-                        {{-- Jumlah total per tipe kunjungan --}}
+                        {{-- info tanggal ter-filter --}}
+                        @if(request()->filled('date'))
+                            <p class="small text-muted">
+                                Log untuk tanggal
+                                <strong>{{ \Carbon\Carbon::parse(request('date'))->translatedFormat('d F Y') }}</strong>
+                            </p>
+                        @endif
+                
+                        {{-- ===================== BADGE TOTAL PER TIPE ===================== --}}
                         <div class="row mb-3">
                             <div class="col-md-4 mb-2">
                                 <div class="badge bg-primary w-100 px-3 py-3 text-center fs-5">
@@ -446,267 +501,237 @@
 
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-   <script>
-        const bulanKunjungan = @json($bulanKunjungan); // e.g. [1, 2, 3, 4]
-        const totalKunjungan = @json($totalKunjungan); // e.g. [123, 200, 150, 180]
+       
+    <!--const bulanKunjungan = @json($bulanKunjungan); -->
+    <!--const totalKunjungan = @json($totalKunjungan); -->
+   <!--<script>-->
+      
     
-        const ctxLanding = document.getElementById('landingChart').getContext('2d');
-        const landingChart = new Chart(ctxLanding, {
-            type: 'line',
-            data: {
-                labels: bulanKunjungan.map(b => new Date(2023, b - 1).toLocaleString('en-US', {
-                    month: 'long'
-                })),
-                datasets: [{
-                    label: 'Kilau Website Visits',
-                    data: totalKunjungan,
-                    borderColor: '#1363c6',
-                    backgroundColor: 'rgba(19, 99, 198, 0.2)',
-                    tension: 0.4
+   <!--     const ctxLanding = document.getElementById('landingChart').getContext('2d');-->
+   <!--     const landingChart = new Chart(ctxLanding, {-->
+   <!--         type: 'line',-->
+   <!--         data: {-->
+   <!--             labels: bulanKunjungan.map(b => new Date(2023, b - 1).toLocaleString('en-US', {-->
+   <!--                 month: 'long'-->
+   <!--             })),-->
+   <!--             datasets: [{-->
+   <!--                 label: 'Kilau Website Visits',-->
+   <!--                 data: totalKunjungan,-->
+   <!--                 borderColor: '#1363c6',-->
+   <!--                 backgroundColor: 'rgba(19, 99, 198, 0.2)',-->
+   <!--                 tension: 0.4-->
+   <!--             }]-->
+   <!--         },-->
+   <!--         options: {-->
+   <!--             responsive: true,-->
+   <!--             scales: {-->
+   <!--                 y: {-->
+   <!--                     beginAtZero: true-->
+   <!--                 }-->
+   <!--             }-->
+   <!--         }-->
+   <!--     });-->
+   <!-- </script>-->
+   
+  <script>
+    function setActiveBtn(group) {
+        document.querySelectorAll('#trafficFilter button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.group === group);
+        });
+    }
+    
+    let landingChart;
+    
+    function renderLanding(labels = [], data = []) {
+        const ctx = document.getElementById('landingChart').getContext('2d');
+    
+        if (landingChart) {
+            landingChart.data.labels           = labels;
+            landingChart.data.datasets[0].data = data;
+            landingChart.update();
+            return;
+        }
+    
+        landingChart = new Chart(ctx, {
+            type : 'line',
+            data : {
+                labels   : labels,
+                datasets : [{
+                    label           : 'Kunjungan Website',
+                    data            : data,
+                    borderColor     : '#1363c6',
+                    backgroundColor : 'rgba(19,99,198,0.2)',
+                    tension         : 0.4
                 }]
             },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
+            options : {
+                responsive : true,
+                scales     : { y : { beginAtZero : true } }
             }
         });
+    }
+    
+    function loadTraffic(group = 'daily') {
+        setActiveBtn(group);
+    
+        fetch(`{{ route('dashboard.trafficData') }}?group=${group}`)
+            .then(r => r.json())
+            .then(rows => {
+                const labels = rows.map(r => r.label);
+                const totals = rows.map(r => r.total);
+    
+                if (group === 'monthly') {
+                    labels.forEach((v, i) => {
+                        const d = new Date(v + '-01');
+                        labels[i] = d.toLocaleDateString('id-ID', { month : 'short', year : 'numeric' });
+                    });
+                }
+    
+                renderLanding(labels, totals);
+            })
+            .catch(console.error);
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTraffic('daily');  
+    
+        document.querySelectorAll('#trafficFilter button')
+                .forEach(btn => btn.addEventListener('click',
+                    () => loadTraffic(btn.dataset.group)));
+    });
     </script>
 
 
-    <script>
-        $(document).ready(function() {
-            const modalHapus = new bootstrap.Modal(document.getElementById('modalHapusDonasi'));
+<script>
+$(function () {
 
-            $('body').on('click', '.btnHapusDonasi', function() {
-                const id = $(this).data('id');
-                const url = `{{ url('/admin/dashboard/donasi') }}/${id}`;
+  /* =================================================================
+     1)  Modal hapus & DataTable — tetap seperti semula
+  ================================================================= */
+  const modalHapus = new bootstrap.Modal('#modalHapusDonasi');
 
-                $('#hapusDonasiForm').attr('action', url);
-                modalHapus.show();
-            });
-        });
+  $('body').on('click','.btnHapusDonasi',function(){
+      $('#hapusDonasiForm').attr('action',
+          `{{ url('/admin/dashboard/donasi') }}/${$(this).data('id')}`);
+      modalHapus.show();
+  });
 
+  $('#donasi-table').DataTable({ order:[[5,'desc']] });
 
-        $(document).ready(function() {
-            // Inisialisasi DataTable
-            // $('#donasi-table').DataTable();
-            $('#donasi-table').DataTable({
-                order: [
-                    [5, 'desc']
-                ] // ⬅️ Kolom ke-6 yaitu "Tanggal Donasi" descending
-            });
+  /* =================================================================
+     2)  Grafik DONASI dinamis
+  ================================================================= */
+  const fmtMonth = ym => new Date(ym+'-01')
+        .toLocaleDateString('id-ID',{month:'short',year:'numeric'});
 
+  let donasiChart = null;           // referensi chart
 
-            // Ambil data dari PHP
-            var bulan = @json($bulan);
-            var totalDonasi = @json($totalDonasi);
+  function drawDonasi(labels,data){
+      donasiChart?.destroy();       // hapus chart lama (jika ada)
+      donasiChart = new Chart(
+          document.getElementById('donasiChart').getContext('2d'),
+          { type:'bar',
+            data:{ labels,
+                   datasets:[{ label:'Total Donasi',
+                               data,
+                               backgroundColor:'#1363c6',
+                               borderColor:'#0d4b8c',
+                               borderWidth:1 }]},
+            options:{ responsive:true, scales:{ y:{ beginAtZero:true } } }});
+  }
 
-            // Membuat Grafik Donasi
-            var ctx = document.getElementById('donasiChart').getContext('2d');
-            var donasiChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: bulan.map(function(month) {
-                        return new Date(2025, month - 1).toLocaleString('default', {
-                            month: 'long'
-                        });
-                    }), // Mengubah angka bulan menjadi nama bulan
-                    datasets: [{
-                        label: 'Total Donasi',
-                        data: totalDonasi,
-                        backgroundColor: '#1363c6', // Warna grafik
-                        borderColor: '#0d4b8c', // Border warna grafik
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+  function loadDonasi(group='daily'){
+      // set tombol aktif
+      $('#donasiFilter button').removeClass('active')
+          .filter(`[data-group="${group}"]`).addClass('active');
 
-            // Filter by Month and Status Donasi
-            $('#filter-form').on('submit', function(e) {
-                e.preventDefault();
+      $.ajax({
+          url : '{{ route('dashboard.donasiData') }}',
+          data: { group },
+          dataType: 'json',
+          success: rows =>{
+              if (!Array.isArray(rows)) rows = [rows];     // objek tunggal → array
+              let labels = rows.map(r=>r.label);
 
-                var month = $('#monthFilter').val();
-                var status = $('#statusFilter').val();
+              if (group === 'monthly') labels = labels.map(fmtMonth);
+              // yearly → label spt "2025", daily → label "2025-06-17"
 
-                // Send AJAX request to get filtered data
-                $.ajax({
-                    url: '{{ route('dashboard.filterDonasi') }}',
-                    method: 'GET',
-                    data: {
-                        month: month,
-                        status: status
-                    },
-                    success: function(response) {
-                        // Update table and chart with new filtered data
-                        updateTable(response.data);
-                        updateChart(response.bulan, response.totalDonasi);
-                    }
-                });
-            });
+              drawDonasi(labels, rows.map(r=>Number(r.total)));
+          },
+          error: (jq,x,e)=>{
+              console.error('[donasiData]', jq.status, e, jq.responseText);
+              alert('Tidak bisa memuat data Donasi. Lihat console / laravel.log');
+          }
+      });
+  }
 
-            // Update the table with filtered data
-            /* function updateTable(data) {
-                const tbody = $('#donasi-table tbody');
-                tbody.empty();
+  // ====== panggil default: HARlAN ======
+  loadDonasi('daily');
 
-                // Urutkan dari terbaru ke terlama
-                data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  // ====== handler tombol filter rentang ======
+  $('#donasiFilter button').on('click', function () {
+      loadDonasi($(this).data('group'));
+  });
 
-                data.forEach(item => {
-                    const formattedDate = new Date(item.created_at).toLocaleDateString('id-ID', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    });
+  /* =================================================================
+     3)  Form filter bulan & status — perbarui tabel + grafik
+  ================================================================= */
+  $('#filter-form').on('submit', function(e){
+      e.preventDefault();
+      $.ajax({
+          url : '{{ route('dashboard.filterDonasi') }}',
+          data: { month:$('#monthFilter').val(), status:$('#statusFilter').val() },
+          dataType:'json',
+          success: res=>{
+              updateTable(res.data);
+              drawDonasi(res.bulan, Object.values(res.totalDonasi));
+          }
+      });
+  });
 
-                    const jenisDonasi = item.type_donasi == 1 ? 'Program' : 'Umum';
+  /* =================================================================
+     4)  updateTable & attachModalDeleteLogic  (tetap)
+  ================================================================= */
+  function updateTable(data){
+      const tbody = $('#donasi-table tbody').empty();
+      data.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+      data.forEach(item=>{
+          const d = new Date(item.created_at)
+                .toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+          const jenis  = item.type_donasi==1 ? 'Program' : 'Umum';
+          const detail = item.type_donasi==1
+               ? (item.program ? item.program.judul : 'Program Tanpa Judul')
+               : (item.opsional_umum==1 ? 'Zakat' : 'Infaq');
+          const status = item.status_donasi==1
+               ? '<button class="btn btn-warning w-100">Pending</button>'
+               : '<button class="btn btn-success w-100">Berdonasi</button>';
+          const aksi   = `<button class="btn btn-sm btn-link text-danger p-0 btnHapusDonasi"
+                            data-id="${item.id}" title="Hapus Donasi">
+                            <i class="fas fa-trash-alt"></i></button>`;
+          tbody.append(`<tr>
+              <td class="text-nowrap">${item.nama??'-'}</td>
+              <td>${jenis}</td>
+              <td class="text-break">${detail}</td>
+              <td>${new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR'}).format(item.total_donasi)}</td>
+              <td class="text-break">${item.email??'-'}</td>
+              <td class="text-break">${item.no_hp??'-'}</td>
+              <td class="text-break">${item.feedback??'-'}</td>
+              <td class="text-nowrap">${d}</td>
+              <td class="text-nowrap">${status}</td>
+              <td>${aksi}</td></tr>`);
+      });
+      attachModalDeleteLogic();
+  }
 
-                    let donasiDetail = '-';
-                    if (item.type_donasi == 1) {
-                        donasiDetail = item.program ? item.program.judul : 'Program Tanpa Judul';
-                    } else {
-                        donasiDetail = item.opsional_umum == 1 ? 'Zakat' : 'Infaq';
-                    }
+  function attachModalDeleteLogic(){
+      $('body').off('click','.btnHapusDonasi').on('click','.btnHapusDonasi',function(){
+          $('#hapusDonasiForm').attr('action',
+              `/admin/dashboard/donasi/${$(this).data('id')}`);
+          modalHapus.show();
+      });
+  }
+  attachModalDeleteLogic();
 
-                    const statusDonasi = item.status_donasi == 1
-                        ? '<button class="btn btn-warning w-100">Pending</button>'
-                        : '<button class="btn btn-success w-100">Berdonasi</button>';
-
-                    const csrf = $('meta[name="csrf-token"]').attr('content');
-
-                    const deleteAction = `
-                <form action="/admin/dashboard/donasi/${item.id}" method="POST" onsubmit="return confirm('Yakin ingin menghapus donasi ini?')">
-                    <input type="hidden" name="_token" value="${csrf}">
-                    <input type="hidden" name="_method" value="DELETE">
-                    <button class="btn btn-sm btn-link text-danger p-0" style="font-size: 1.2rem;" title="Hapus Donasi">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            `;
-
-                    const row = `
-                <tr>
-                    <td class="text-nowrap">${item.nama ?? '-'}</td>
-                    <td>${jenisDonasi}</td>
-                    <td class="text-break">${donasiDetail}</td>
-                    <td>${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(item.total_donasi)}</td>
-                    <td class="text-break">${item.email ?? '-'}</td>
-                    <td class="text-break">${item.no_hp ?? '-'}</td>
-                    <td class="text-break">${item.feedback ?? '-'}</td>
-                    <td class="text-nowrap">${formattedDate}</td>
-                    <td class="text-nowrap">${statusDonasi}</td>
-                    <td>${deleteAction}</td>
-                </tr>
-            `;
-
-                    tbody.append(row);
-                });
-            } */
-
-            function updateTable(data) {
-                const tbody = $('#donasi-table tbody');
-                tbody.empty();
-
-                data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-                data.forEach(item => {
-                    const formattedDate = new Date(item.created_at).toLocaleDateString('id-ID', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    });
-
-                    const jenisDonasi = item.type_donasi == 1 ? 'Program' : 'Umum';
-                    let donasiDetail = '-';
-                    if (item.type_donasi == 1) {
-                        donasiDetail = item.program ? item.program.judul : 'Program Tanpa Judul';
-                    } else {
-                        donasiDetail = item.opsional_umum == 1 ? 'Zakat' : 'Infaq';
-                    }
-
-                    const statusDonasi = item.status_donasi == 1 ?
-                        '<button class="btn btn-warning w-100">Pending</button>' :
-                        '<button class="btn btn-success w-100">Berdonasi</button>';
-
-                    // Gunakan tombol trigger modal
-                    const aksiButton = `
-                        <button class="btn btn-sm btn-link text-danger p-0 btnHapusDonasi"
-                                data-id="${item.id}" style="font-size: 1.2rem;" title="Hapus Donasi">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    `;
-
-                    const row = `
-                        <tr>
-                            <td class="text-nowrap">${item.nama ?? '-'}</td>
-                            <td>${jenisDonasi}</td>
-                            <td class="text-break">${donasiDetail}</td>
-                            <td>${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(item.total_donasi)}</td>
-                            <td class="text-break">${item.email ?? '-'}</td>
-                            <td class="text-break">${item.no_hp ?? '-'}</td>
-                            <td class="text-break">${item.feedback ?? '-'}</td>
-                            <td class="text-nowrap">${formattedDate}</td>
-                            <td class="text-nowrap">${statusDonasi}</td>
-                            <td>${aksiButton}</td>
-                        </tr>
-                    `;
-
-                    tbody.append(row);
-                });
-
-                // Re-attach modal logic (jika isi table baru)
-                attachModalDeleteLogic();
-            }
-
-            function attachModalDeleteLogic() {
-                const modalHapus = new bootstrap.Modal(document.getElementById('modalHapusDonasi'));
-
-                $('body').off('click', '.btnHapusDonasi').on('click', '.btnHapusDonasi', function() {
-                    const id = $(this).data('id');
-                    const url = `/admin/dashboard/donasi/${id}`;
-                    $('#hapusDonasiForm').attr('action', url);
-                    modalHapus.show();
-                });
-            }
-
-            attachModalDeleteLogic(); // inisialisasi pertama kali saat halaman dimuat
-
-            // Update the chart with filtered data
-            function updateChart(bulan, totalDonasi) {
-                var ctx = document.getElementById('donasiChart').getContext('2d');
-                var donasiChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: bulan,
-                        datasets: [{
-                            label: 'Total Donasi',
-                            data: totalDonasi,
-                            backgroundColor: '#1363c6',
-                            borderColor: '#0d4b8c',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        });
-    </script>
+});
+</script>
 @endsection

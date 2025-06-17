@@ -10,7 +10,9 @@ use App\Models\ViewTraffic;
 use App\Models\MitraDonatur;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB; 
 
 class DashboardController extends Controller
 {
@@ -63,33 +65,73 @@ class DashboardController extends Controller
 
         $bulanKunjungan = $rekapKunjungan->pluck('bulan')->toArray();
         $totalKunjungan = $rekapKunjungan->pluck('total')->toArray();
-
-
-        // $landingLogs = ViewTraffic::where('type', ViewTraffic::TYPE_LANDINGPAGE)
-        //     ->orderBy('viewed_at', 'desc')
-        //     ->get();
-
-        // $landingLogs = ViewTraffic::orderBy('viewed_at', 'desc')->get();
-        $perPage = $request->input('per_page', 10);  
-        $trafficQuery  = ViewTraffic::orderByDesc('viewed_at');
-
-        // 👈 new — filter berdasarkan tanggal (YYYY-MM-DD)
+        
+        $perPage = $request->input('per_page', 10);
+        $trafficQuery = ViewTraffic::orderByDesc('viewed_at');
+        
+        $start = $end = null;
         if ($request->filled('date')) {
-            $trafficQuery->whereDate('viewed_at', $request->date);
+            $start = Carbon::createFromFormat('Y-m-d', $request->date)
+                           ->startOfDay();          // 00:00:00 lokal
+            $end   = $start->copy()->endOfDay();    // 23:59:59
+            $trafficQuery->whereBetween('viewed_at', [$start, $end]);
         }
         
-        $landingLogs = ViewTraffic::orderBy('viewed_at', 'desc')
-                    ->paginate($perPage)
-                    ->withQueryString();  
+        /* ------- detail log ------- */
+        $landingLogs = $trafficQuery->paginate($perPage)
+                                    ->withQueryString();
+        
+        /* ------- rekap per tipe & per bulanâ€”ikut filter ------- */
+        $base = ViewTraffic::query();
+        if ($start && $end) {
+            $base->whereBetween('viewed_at', [$start, $end]);
+        }
                     
         $totalLandingPage       = ViewTraffic::where('type', ViewTraffic::TYPE_LANDINGPAGE)->count();
         $totalFormDonasi        = ViewTraffic::where('type', ViewTraffic::TYPE_FORM_DONASI)->count();
         $totalFormDonasiProgram = ViewTraffic::where('type', ViewTraffic::TYPE_FORM_DONASI_PROGRAM)->count();
 
+
+
         return view('AdminPage.dashboard', compact('totalTestimoni', 'totalBerita', 'totalMitraDonatur',
         'totalKantorCabang',   'donasi',   'bulan', 'totalDonasi',  'bulanKunjungan', 'totalKunjungan',    'landingLogs',  'totalLandingPage',
     'totalFormDonasi', 'totalFormDonasiProgram'));
     }
+    
+    public function donasiData(Request $request)
+    {
+        $group = $request->input('group', 'monthly');   // daily|monthly|yearly
+        $q     = DB::table('donasikilau');              // ← BUKAN model
+    
+        switch ($group) {
+            case 'daily':        // 2025-06-17
+                $rows = $q->selectRaw('DATE(created_at)  AS label,
+                                       SUM(total_donasi) AS total')
+                            ->groupBy('label')
+                            ->orderBy('label')
+                            ->get();
+                break;
+    
+            case 'yearly':       // 2025
+                $rows = $q->selectRaw('YEAR(created_at)  AS label,
+                                       SUM(total_donasi) AS total')
+                            ->groupBy('label')
+                            ->orderBy('label')
+                            ->get();
+                break;
+    
+            default:             // monthly  ⇒  2025-06
+                $rows = $q->selectRaw("DATE_FORMAT(created_at,'%Y-%m') AS label,
+                                       SUM(total_donasi)              AS total")
+                            ->groupBy('label')
+                            ->orderBy('label')
+                            ->get();
+                break;
+        }
+    
+        return Response::json($rows);
+    }
+
     
      public function deleteDonasi($id)
     {
@@ -127,6 +169,55 @@ class DashboardController extends Controller
             'totalDonasi' => $totalDonasi
         ]);
     }
+    
+    public function trafficData(Request $request)
+    {
+        $group = $request->input('group', 'monthly');   // daily | monthly | yearly
+        $type  = $request->input('type');              // optional: landingpage, form_donasi, dst
+    
+        $query = ViewTraffic::query();
+    
+        if ($type) {
+            $query->where('type', $type);
+        }
+    
+        switch ($group) {
+            case 'daily':
+                $data = $query->selectRaw("
+                            DATE(viewed_at)   AS label,
+                            COUNT(*)          AS total
+                        ")
+                        ->groupByRaw('DATE(viewed_at)')
+                        ->orderByRaw('DATE(viewed_at)')
+                        ->get();
+                break;
+    
+            case 'yearly':
+                $data = $query->selectRaw("
+                            YEAR(viewed_at)   AS label,
+                            COUNT(*)          AS total
+                        ")
+                        ->groupByRaw('YEAR(viewed_at)')
+                        ->orderByRaw('YEAR(viewed_at)')
+                        ->get();
+                break;
+    
+            default: // monthly
+                $data = $query->selectRaw("
+                            DATE_FORMAT(viewed_at,'%Y-%m') AS label,
+                            COUNT(*)                       AS total
+                        ")
+                        ->groupByRaw("DATE_FORMAT(viewed_at,'%Y-%m')")
+                        ->orderByRaw("DATE_FORMAT(viewed_at,'%Y-%m')")
+                        ->get();
+                break;
+        }
+    
+        return Response::json($data);  // [{label:'2025-06-17', total:123}, ...]
+    }
+    
+    
+
 
     
 }

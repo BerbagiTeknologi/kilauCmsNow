@@ -920,6 +920,10 @@
 @section('scripts')
     <script src="https://app.midtrans.com/snap/snap.js" data-client-key="Mid-client-Cuh29wUmwqZAF-6t"></script>
     <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+
+    <script>
+        
+    </script>
     <script>
         $(document).ready(function() {
             const urlParams = new URLSearchParams(window.location.search);

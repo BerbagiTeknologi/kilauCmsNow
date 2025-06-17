@@ -110,10 +110,19 @@ Route::post('/track-donasi-modal-program', [HomeController::class, 'trackDonasiM
 
 /* Admin Page */
 Route::middleware(['userAccess:admin'])->prefix('admin')->group(function () {
+    
+    Route::post('/upload-image', [BeritaAdminController::class, 'uploadImage'])->name('upload.image');
+    
     // Dashboard Route
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
     Route::get('/dashboard/filter-donasi', [DashboardController::class, 'filterDonasi'])->name('dashboard.filterDonasi');
     Route::delete('/dashboard/donasi/{id}', [DashboardController::class, 'deleteDonasi'])->name('dashboard.deleteDonasi');
+    
+    Route::get('/dashboard/donasi-data',   [DashboardController::class, 'donasiData'])->name('dashboard.donasiData');
+    
+    Route::get('/dashboard/traffic-data',
+        [DashboardController::class, 'trafficData'])
+        ->name('dashboard.trafficData');
 
 
     Route::prefix('profil')->group(function () {
