@@ -362,7 +362,8 @@ class HomeController extends Controller
     public function handleMidtransCallback(Request $request)
     {
         // Konfigurasi untuk memverifikasi signature
-        $serverKey = env('MIDTRANS_SERVER_KEY');
+        $serverKey = 'Mid-server-AjhceItc4Bi6b9hxSuO-vDL0'; 
+        // $serverKey = env('MIDTRANS_SERVER_KEY');
         $orderId = $request['order_id'];
         $statusCode = $request['status_code'];
         $grossAmount = $request['gross_amount'];

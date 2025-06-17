@@ -1142,7 +1142,7 @@
                                     type: 'POST',
                                     data: {
                                         order_id: donasiId, 
-                                        // order_id: 'donasi-' + donasiId, 
+                                        // order_id: 'donasi-' + donasiId
                                         total: amount
                                     },
                                     success: function (res) {
