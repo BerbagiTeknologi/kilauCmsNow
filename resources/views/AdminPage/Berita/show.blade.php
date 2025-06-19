@@ -85,6 +85,7 @@
 
                     <!-- Judul Berita (ditempatkan di bawah carousel) -->
                     <h3 id="modal-judul" class="title mt-3"></h3>
+                    <p id="modal-author" class="text-muted mb-2"></p> 
 
                     <!-- Meta Top (Hanya ikon: Like, Comment, Views) -->
                     <div class="meta-top">

@@ -121,6 +121,17 @@
                             <small id="seo-title-analysis" class="form-text text-muted"></small>
                         </div>
                         <div class="form-group">
+                            <label>Nama Pembuat Berita</label>
+                            <input  type="text"
+                                    id="author-input"  
+                                    name="author"                
+                                    class="form-control"
+                                    placeholder="Nama penulis (opsional)">
+                            <small class="form-text text-muted">
+                                Kosongkan jika tidak ingin menampilkan nama penulis.
+                            </small>
+                        </div>
+                        <div class="form-group">
                             <label>Konten</label>
                             <textarea name="konten" id="konten-create" class="form-control ckeditor" rows="5" style="display: none;"></textarea>
                             <small id="seo-content-analysis" class="form-text text-muted"></small>
@@ -194,6 +205,11 @@
                             <label>Judul</label>
                             <input type="text" id="edit-judul" name="judul" class="form-control" required>
                             <small id="edit-seo-title-analysis" class="form-text text-muted"></small>
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Pembuat Berita</label>
+                            <input type="text" id="edit-author" name="author" class="form-control" placeholder="Nama penulis (opsional)">
+                            <small class="form-text text-muted">Kosongkan jika tidak ingin menampilkan nama penulis.</small>
                         </div>
                         <div class="form-group">
                             <label>Konten</label>
@@ -556,6 +572,9 @@
             // Panggil fungsi saat modal dibuka
             $('#createBeritaModal').on('shown.bs.modal', function() {
                 loadKategoriDropdown();
+
+                const author = localStorage.getItem('user_name') || '';
+                $('#author-input').val(author);
             });
 
             // Handle Form Submit (AJAX) untuk menambahkan berita
@@ -734,6 +753,13 @@
                             $('#modal-tanggal').text(formattedDate);
                             $('#modal-views').text(berita.views_berita || 0);
                             $('#modal-judul').text(berita.judul);
+
+                            if (berita.author) {
+                                $('#modal-author').text('Penulis: ' + berita.author);
+                            } else {
+                                $('#modal-author').text('');
+                            }
+
                             document.getElementById('modal-konten').innerHTML = berita.konten;
                             $('#modal-konten img').each(function() {
                                 $(this).attr('style', 'max-width: 100%; height: auto; display: block;');
@@ -1060,6 +1086,7 @@
                             // Isi form dengan data berita
                             $('#edit-id').val(berita.id);
                             $('#edit-judul').val(berita.judul);
+                            $('#edit-author').val(berita.author ?? '');
                             $('#edit-judul').trigger('input');
                             let formattedDate = new Date(berita.tanggal).toISOString().split('T')[0];
                             $('#edit-tanggal').val(formattedDate);
@@ -1165,7 +1192,8 @@
                 $('#edit-berita-form')[0].reset();
                 $('#preview-foto, #preview-foto2, #preview-foto3').hide();
                 quillEdit.root.innerHTML = '';
-                $('#edit-tags-container').html(''); // Reset tags container
+                $('#edit-tags-container').html('');
+                $('#edit-author').val('');
             });
 
         });

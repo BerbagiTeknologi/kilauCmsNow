@@ -65,6 +65,15 @@
           </div>
 
           <div class="mb-3">
+                <label class="form-label">Nama Pembuat Berita</label>
+                <input  type="text"
+                        id="author-input"        
+                        name="author"             
+                        class="form-control"
+                        placeholder="Nama penulis">             
+            </div>
+
+          <div class="mb-3">
               <label class="form-label">Konten</label>
               <textarea name="konten" id="konten-create" class="form-control" style="display:none"></textarea>
               <small id="seo-content-analysis" class="form-text text-muted"></small>
@@ -164,6 +173,9 @@ $('#createBeritaModal').on('shown.bs.modal',()=>{
       if(r.success) r.data.data.forEach(k=>opt+=`<option value="${k.id}">${k.name_kategori}</option>`);
       $('#id_kategori_berita').html(opt);
   }).fail(()=>$('#id_kategori_berita').html('<option>Gagal memuat</option>'));
+
+  const author = localStorage.getItem('user_name') || '';
+  $('#author-input').val(author);
 });
 
 /* ——— RENDER KARTU LIST BERITA ——— */
