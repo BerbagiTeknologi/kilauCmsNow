@@ -391,6 +391,15 @@
                                 <i class="fas fa-check-circle text-primary ms-1"></i>
                             </div>
 
+                            @if(!empty($berita['author']))
+                                <div class="d-flex align-items-center mt-1">
+                                    <i class="fas fa-user-edit text-secondary me-1"></i>
+                                    <span class="text-muted">
+                                        <strong>Penulis&nbsp;:</strong> {{ $berita['author'] }}
+                                    </span>
+                                </div>
+                            @endif
+
                             <div class="meta-top">
                                 <!-- Kiri: Tanggal & Waktu -->
                                 <div class="d-flex align-items-center">
@@ -693,6 +702,15 @@
                                 tagsHtml += `<a href="${tag.link}" target="_blank" class="tag-link">${tag.nama}</a>`;
                             });
                             }
+
+                            const authorHtml = berita.author
+                                ? `<div class="d-flex align-items-center mt-1">
+                                    <i class="fas fa-user-edit text-secondary me-1"></i>
+                                    <span class="text-muted">
+                                        <strong>Penulis&nbsp;:</strong> ${berita.author}
+                                    </span>
+                                </div>`
+                                : '';    
                             
                             let articleHtml = `<article class="article">
                                 ${carouselHtml}
@@ -701,6 +719,7 @@
                                     <h6 class="text-primary fw-bold mb-0">BeritaKilau</h6>
                                     <i class="fas fa-check-circle text-primary ms-1"></i>
                                 </div>
+                                ${authorHtml} 
                                 ${metaHtml}
                                 ${kategoriHtml}
                                 <div class="content py-3" id="konten-detail">
@@ -920,6 +939,15 @@
                                 tagsHtml += `<a href="${tag.link}" target="_blank" class="tag-link">${tag.nama}</a>`;
                             });
                             }
+
+                              const authorHtml = berita.author
+                                ? `<div class="d-flex align-items-center mt-1">
+                                    <i class="fas fa-user-edit text-secondary me-1"></i>
+                                    <span class="text-muted">
+                                        <strong>Penulis&nbsp;:</strong> ${berita.author}
+                                    </span>
+                                </div>`
+                                : '';    
                             
                             let articleHtml = `<article class="article">
                                 ${carouselHtml}
@@ -928,6 +956,7 @@
                                     <h6 class="text-primary fw-bold mb-0">BeritaKilau</h6>
                                     <i class="fas fa-check-circle text-primary ms-1"></i>
                                 </div>
+                                ${authorHtml} 
                                 ${metaHtml}
                                 ${kategoriHtml}
                                 <div class="content py-3" id="konten-detail">
