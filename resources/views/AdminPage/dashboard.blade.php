@@ -200,9 +200,9 @@
                     <div class="col-md-6 mt-2">
                         <h5 class="fw-bold">Grafik Donasi</h5>
                         <div id="donasiFilter" class="btn-group btn-group-sm mb-2" role="group">
-                            <button class="btn btn-outline-success active" data-group="daily">Harian</button>
-                            <button class="btn btn-outline-success"          data-group="monthly">Bulanan</button>
-                            <button class="btn btn-outline-success"          data-group="yearly">Tahunan</button>
+                            <button class="btn btn-outline-primary active" data-group="daily">Harian</button>
+                            <button class="btn btn-outline-primary"          data-group="monthly">Bulanan</button>
+                            <button class="btn btn-outline-primary"          data-group="yearly">Tahunan</button>
                         </div>
                         <canvas id="donasiChart" height="200"></canvas>
                     </div>

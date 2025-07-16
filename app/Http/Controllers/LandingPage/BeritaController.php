@@ -26,26 +26,28 @@ class BeritaController extends Controller
         $kategoriBerita = $responseKategori->successful() ? $responseKategori->json()['data']['data'] ?? [] : [];
     
         // Siapkan default variabel agar tidak undefined
-        $page       = (int) $request->query('camp_page', 1);
-        $perPage    = (int) $request->query('camp_per_page', 5);
-        $campaigns  = collect(); // ⬅️ ini penting!
-        $lastPage   = $page;
-    
+        $page    = (int) $request->query('camp_page', 1);
+        $perPage = (int) $request->query('camp_per_page', 5);
+        $campaigns = collect();
+        $lastPage  = $page;
+
         try {
-            $response = Http::withoutRedirecting()->get('https://berbagibahagia.org/api/getcampung', [
-                'page' => $page,
-                'per_page' => $perPage
-            ]);
-    
+            $response = Http::withoutRedirecting()->get(
+                'https://berbagibahagia.org/api/getcampung',
+                ['page' => $page, 'per_page' => $perPage, 'status' => 1]
+            );
+
             if ($response->successful()) {
                 $campaigns = collect($response['data']);
-    
-                $meta = $response->json('meta');
-                $lastPage = $meta['last_page'] ?? ($campaigns->count() === $perPage ? $page + 4 : $page);
+
+                $lastPage = (int) ($response['last_page']
+                        ?? $response->json('meta.last_page')
+                        ?? ($campaigns->count() === $perPage ? $page + 1 : $page));
             }
         } catch (\Exception $e) {
             Log::error('Error fetching Campaign: '.$e->getMessage());
         }
+
 
         $programs = Program::where('status_program', Program::PROGRAM_AKTIF)
         ->select('id','judul','thumbnail_image')
@@ -86,7 +88,8 @@ class BeritaController extends Controller
             try {
                 $resCamp = Http::withoutRedirecting()->get('https://berbagibahagia.org/api/getcampung', [
                     'page' => 1,
-                    'per_page' => 10 // ambil besar agar semua terload
+                    'per_page' => 10, // ambil besar agar semua terload
+                    'status' => 1,
                 ]);
                 if ($resCamp->successful()) {
                     $campaigns = collect($resCamp['data']);

@@ -32,24 +32,26 @@
         width: 100%;
     }
 
-    /* Style untuk masing-masing tag link agar tampil seperti tombol kecil */
-    .tag-link {
-        display: inline-block;
-        margin-left: 15px;
-        padding: 5px 10px;
-        font-size: 0.9rem;    /* Ukuran font kecil */
-        color: #007bff;
-        border: 1px solid #007bff;  /* Border tipis pada tiap tag */
-        border-radius: 12px;
-        text-decoration: none;
-        transition: all 0.2s ease;
+    /* wadah seluruh tags */
+    .tags-container { margin-top: 15px; }
+
+    /* tampilan setiap tag */
+    .tag-link{
+        display:inline-block;
+        margin:0 8px 8px 0;
+        padding:5px 10px;
+        font-size:.9rem;
+        color:#007bff;
+        border:1px solid #007bff;
+        border-radius:12px;
+        text-decoration:none;
+        transition:.2s;
+    }
+    .tag-link:hover{
+        background:#007bff;
+        color:#fff;
     }
 
-    .tag-link:hover {
-        background-color: #007bff;
-        color: #fff;
-        text-decoration: none;
-    }
 
 
 </style>

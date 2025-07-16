@@ -157,6 +157,45 @@
                     </div>
                 </li>
 
+                {{-- ==== Artikel Kilau ==== --}}
+                <li class="nav-item dropdown {{ Request::routeIs('article') || Request::routeIs('getKategoriArticle') ? 'active' : '' }}">
+                    <a  href="#"
+                        class="nav-link dropdown-toggle"
+                        id="navbarDropdownArticleKilau"
+                        role="button"
+                        data-toggle="collapse"
+                        data-target="#articleKilauCollapse"
+                        aria-expanded="{{ Request::routeIs('article') || Request::routeIs('getKategoriArticle') ? 'true' : 'false' }}"
+                        aria-controls="articleKilauCollapse">
+                        <i class="fas fa-sticky-note"></i>   {{-- ikon baru --}}
+                        <p>Artikel Kilau</p>
+                    </a>
+
+                    <div id="articleKilauCollapse"
+                        class="collapse {{ Request::routeIs('article') || Request::routeIs('getKategoriArticle') ? 'show' : '' }}">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a  href="{{ route('article') }}"
+                                    class="{{ Request::routeIs('article') ? 'active' : '' }}"
+                                    style="{{ Request::routeIs('article') ? 'color:#1572E8;font-weight:bold;' : '' }}">
+                                    <span class="sub-item">Data Artikel</span>
+                                </a>
+                            </li>
+
+                        
+                            <li>
+                                <a href="{{ route('getKategoriArticle') }}"
+                                class="{{ Request::routeIs('getKategoriArticle') ? 'active' : '' }}"
+                                style="{{ Request::routeIs('getKategoriArticle') ? 'color:#1572E8;font-weight:bold;' : '' }}">
+                                    <span class="sub-item">Data Kategori Artikel</span>
+                                </a>
+                            </li>
+                           
+                        </ul>
+                    </div>
+                </li>
+
+
 
                 <li
                     class="nav-item 

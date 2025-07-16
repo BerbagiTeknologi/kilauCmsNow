@@ -35,18 +35,25 @@
                         <li><a class="dropdown-item {{ Route::currentRouteName() == 'profilStruktur' ? 'active' : '' }}" href="{{ route('profilStruktur') }}">Struktur Kepegawaian</a></li>
                         <li><a class="dropdown-item {{ Route::currentRouteName() == 'profilSejarah' ? 'active' : '' }}" href="{{ route('profilSejarah') }}">Sejarah Kilau</a></li>
                         <li><a class="dropdown-item {{ Route::currentRouteName() == 'profilVisiMisi' ? 'active' : '' }}" href="{{ route('profilVisiMisi') }}">Visi & Misi</a></li>
+                        <li><a class="dropdown-item {{ Route::currentRouteName() == 'dokumen' ? 'active' : '' }}" href="{{ route('dokumen') }}">Dokumen</a></li>
                     </ul>
                 </li>
 
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a class="nav-link {{ Route::currentRouteName() == 'dokumen' ? 'active' : '' }}" href="{{ route('dokumen') }}">
                         Dokumen
                     </a>
-                </li>
+                </li> --}}
 
                 <li class="nav-item">
                     <a class="nav-link {{ Route::currentRouteName() == 'galery' ? 'active' : '' }}" href="{{ route('galery') }}">
                         Galeri
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ Route::currentRouteName() == 'lp.article.index' ? 'active' : '' }}" href="{{ route('lp.article.index') }}">
+                        Artikel
                     </a>
                 </li>
 
@@ -58,7 +65,7 @@
 
                 <li class="nav-item" id="loginWebsiteItem">
                     <a class="nav-link {{ Route::currentRouteName() == 'dashboardWebsite' ? 'active' : '' }}" href="{{ route('dashboardWebsite') }}">
-                        Login Website
+                        Sign In
                     </a>
                 </li>
                 

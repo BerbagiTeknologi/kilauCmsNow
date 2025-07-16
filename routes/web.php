@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AdminPage\ArticleAdminController;
+use App\Http\Controllers\AdminPage\ArticleKategoriAdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdminPage\FaqController;
@@ -31,6 +33,7 @@ use App\Http\Controllers\AdminPage\MitraDonaturController;
 use App\Http\Controllers\AdminPage\SettingsMenuController;
 use App\Http\Controllers\AdminPage\LegalitasLembagaController;
 use App\Http\Controllers\AdminPage\ProgramReferallController;
+use App\Http\Controllers\LandingPage\ArticlePageController;
 use App\Http\Controllers\LandingPage\PointReferallController;
 use App\Http\Controllers\LandingPage\TentangKamiAdminController;
 
@@ -98,6 +101,15 @@ Route::get('/berita/{judul}', [BeritaController::class, 'show'])->name('berita.s
 Route::get('/dokumen', [DokumenController::class, 'dokumen'])->name('dokumen');
 Route::get('/dokumen/share/{id}', [DokumenController::class, 'share'])->name('dokumen.share');
 
+// GET DATA ARTIKEL
+Route::prefix('artikel')->group(function () {
+    Route::get('/',        [ArticlePageController::class,'index'])->name('lp.article.index');
+    Route::get('/list',    [ArticlePageController::class,'list'])->name('lp.article.list'); // ⬅️ AJAX
+    Route::get('/{article:slug}', [ArticlePageController::class,'show'])   // ⬅️ ganti
+         ->name('lp.article.show');
+});
+
+
 /* GET IMAGE MITRA */
 Route::get('program/mitra/{id}/image', [ProgramController::class, 'getMitraImage']);
 Route::get('/get-testimonials', [HomeController::class, 'getTestimonials']);
@@ -112,6 +124,7 @@ Route::post('/track-donasi-modal-program', [HomeController::class, 'trackDonasiM
 Route::middleware(['userAccess:admin'])->prefix('admin')->group(function () {
     
     Route::post('/upload-image', [BeritaAdminController::class, 'uploadImage'])->name('upload.image');
+    Route::post('/upload-image-article',[ArticleAdminController::class, 'uploadImage'])->name('article.uploadImage');
     
     // Dashboard Route
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
@@ -124,8 +137,42 @@ Route::middleware(['userAccess:admin'])->prefix('admin')->group(function () {
         [DashboardController::class, 'trafficData'])
         ->name('dashboard.trafficData');
 
+    Route::prefix('article-kilau')->group(function(){
+        Route::prefix('article')->group(function () {
+            Route::get('/', [ArticleAdminController::class, 'index'])->name('article');
+            Route::get('/list',       [ArticleAdminController::class, 'list'])->name('article.list');  
+            Route::get('/show/{id}', [ArticleAdminController::class, 'showArticle'])->name('showArticle');      
+            Route::post('/create', [ArticleAdminController::class, 'createArticle'])->name('createArticle');
+            Route::put('/update/{id}', [ArticleAdminController::class,'updateArticle'])
+             ->name('article.update');
+              Route::patch('/status/{id}', [ArticleAdminController::class, 'toggleStatus'])
+             ->name('article.toggleStatus');
+            Route::delete('/photo/{id}',[ArticleAdminController::class,'deletePhoto'])
+             ->name('article.photo.delete');
+            Route::delete('/delete',[ArticleAdminController::class, 'deleteArticle'])->name('deleteArticle');
+        });
 
-    Route::prefix('profil')->group(function () {
+        
+        Route::prefix('kategori-article')->group(function() {
+            Route::get('/', [ArticleKategoriAdminController::class, 'getKategoriArticle'])->name('getKategoriArticle');
+
+            Route::get   ('/list',   [ArticleKategoriAdminController::class,'list']);
+            Route::post  ('/create', [ArticleKategoriAdminController::class,'store']);
+            Route::get   ('/show/{id}', [ArticleKategoriAdminController::class,'show']);
+            Route::put   ('/update/{id}', [ArticleKategoriAdminController::class,'update']);
+            Route::patch ('/status/{id}', [ArticleKategoriAdminController::class,'toggleStatus']);
+            Route::delete('/delete/{id}',  [ArticleKategoriAdminController::class,'destroy']);
+        });
+
+          /*   Route::prefix('komentar')->group(function() {
+                Route::get('/', [BeritaAdminController::class, 'getKomentarBerita'])->name('getKomentarBerita');
+            });  
+          
+          */
+       
+    });
+
+     Route::prefix('profil')->group(function () {
         Route::prefix('tentangkami')->group(function () {
             Route::get('/', [TentangKamiController::class, 'tentangkami'])->name('profil.tentangkami');
             Route::post('/create', [TentangKamiController::class, 'tentangkamiCreate'])->name('profil.tentangkamiCreate');
