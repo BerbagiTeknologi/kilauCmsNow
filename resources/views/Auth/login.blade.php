@@ -252,6 +252,9 @@
                         if (res.user && res.user.referral_code) {
                             localStorage.setItem('user_referral_code', res.user.referral_code); // ← ini yang baru
                         }
+                        if (res.user && res.user.photo) {
+                            localStorage.setItem('user_photo', fixKilauUrl(res.user.photo));
+                        }
                         Swal.fire({
                             icon: 'success',
                             title: 'Login Berhasil!',
@@ -279,5 +282,14 @@
                 }
             });
         });
+    </script>
+
+    <script>
+        function fixKilauUrl(url){
+            if(!url) return '';
+            return url.includes('/kilau/upload/')
+                ? url
+                : url.replace('/upload/','/kilau/upload/');
+        }
     </script>
 @endsection

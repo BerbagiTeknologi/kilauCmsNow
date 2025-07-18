@@ -89,10 +89,27 @@
           @endif
         </div>
 
-        {{-- judul & meta --}}
+        {{-- judul --}}
         <h2>{{ $article->title }}</h2>
+
+        {{-- blok author --}}
+        @if($photo_author || $article->author)
+          <div class="mb-3">
+            <small class="text-muted d-block mb-2">Dibuat&nbsp;oleh:</small>
+            <div class="d-flex align-items-center">
+              @if($photo_author)
+                <img src="{{ $photo_author }}"
+                     alt="Foto penulis"
+                     class="rounded-circle me-3"
+                     style="width:48px;height:48px;object-fit:cover">
+              @endif
+              <span class="fw-bold">{{ $article->author ?? '-' }}</span>
+            </div>
+          </div>
+        @endif
+
+        {{-- meta tanggal & kategori --}}
         <div class="small text-muted mb-3">
-          @if($article->author)<i class="fas fa-user-edit me-1"></i>{{ $article->author }} &nbsp;•&nbsp;@endif
           <i class="fas fa-calendar-alt me-1"></i>{{ optional($article->created_at)->translatedFormat('d F Y H:i') ?? '-' }} WIB
           @if($article->kategori)&nbsp;•&nbsp;<i class="fas fa-folder-open me-1"></i>{{ $article->kategori->name_kategori }}@endif
         </div>

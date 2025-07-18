@@ -91,6 +91,7 @@ class LoginController extends Controller
                     'user_token' => $data['token'],
                     'user_level' => $data['berhasil']['level'],
                     'user_referral_code' => $data['berhasil']['referral_code'] ?? null,
+                    'user_photo'  => $data['berhasil']['foto'] ?? null,
                 ]);
     
                 // Hanya user dengan CMS = admin yang boleh ke dashboard
@@ -106,6 +107,7 @@ class LoginController extends Controller
                         'name' => session('user_name'),
                         'level' => session('user_level'),
                         'referral_code' => session('user_referral_code'),
+                        'photo' => session('user_photo'), 
                     ],
                 ]);
             }

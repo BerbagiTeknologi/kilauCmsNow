@@ -87,6 +87,7 @@ class ArticlePageController extends Controller
         return view('LandingPageKilau.Article.show',[
             'article'     => $article->load('tags','kategori'),
             'photos'      => $photos,
+            'photo_author'=> $article->photo_author, 
             'placeholder' => asset('assets_admin/img/noimage.jpg'),
             'latest'      => $latest,
         ]);

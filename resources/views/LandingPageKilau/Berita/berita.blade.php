@@ -223,12 +223,10 @@
             padding: 10px 0;
         }
 
-        .kategori-badge {
+        /* .kategori-badge {
             flex: 0 0 auto;
-            /* Prevent them from shrinking or growing */
             width: 140px;
             height: 50px;
-            background-color: #1363c6;
             color: white;
             font-weight: bold;
             border-radius: 25px;
@@ -242,7 +240,7 @@
 
         .kategori-badge.bg-secondary {
             background-color: gray;
-        }
+        } */
 
         /* ------------ TAG / CHIP ------------- */
         .tags-container{
@@ -302,22 +300,22 @@
     <!-- Blog Section Start -->
     <div class="container-fluid py-5 blog-section">
         <div class="container py-5">
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h2 class="mb-1">Ikuti Berita Terbaru & Dapatkan Wawasan Mendalam</h2>
+                    <p>Simak informasi lengkap di bawah ini dan jelajahi rekomendasi berita menarik lainnya.</p>
+                </div>
+            </div>
+
             <div class="row g-5">
-
-                {{-- <div class="container text-center mt-4">
-                    <h3 class="text-primary fw-bold mb-4">KATEGORI BERITA</h3>
-                    <div id="kategori-container" class="kategori-container">
-                    </div>
-                </div> --}}
-
-                <div class="container text-center mt-2">
+                {{-- <div class="container text-center mt-2">
                     <h3 class=" fw-bold mb-4" style="color: #0e4a9e;">KATEGORI BERITA</h3>
                     <div class="scroll-wrapper">
                         <div id="kategori-container" class="kategori-container">
                             <!-- Kategori akan dimuat lewat AJAX -->
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <div class="col-lg-8">
                     <section id="blog-details" class="blog-details section">
@@ -457,14 +455,27 @@
                                 </div>
                             </div>
 
-                            @if (isset($berita['kategori']) && isset($berita['kategori']['name_kategori']))
+                           {{--  @if (isset($berita['kategori']) && isset($berita['kategori']['name_kategori']))
                                 <div class="d-flex align-items-center mb-2">
                                     <i class="fas fa-folder-open text-primary me-2"></i>
-                                    <a href="#" class="badge bg-primary text-white px-3 py-2 text-decoration-none">
+                                    <a href="#"  class="badge bg-primary text-white px-3 py-2 text-decoration-none">
                                         {{ $berita['kategori']['name_kategori'] }}
                                     </a>
                                 </div>
+                            @endif --}}
+
+                            @if(isset($berita['kategori']['name_kategori']))
+                                <a  href="#"
+                                    class="kategori-badge badge bg-primary text-white d-inline-flex align-items-center gap-1
+                                        px-2 py-1 rounded-pill small"
+                                    data-id="{{ $berita['kategori']['id'] ?? '' }}"
+                                    data-name="{{ $berita['kategori']['name_kategori'] }}">
+                                    {{-- ikon sedikit lebih besar (≈ 14 px) --}}
+                                    <i class="fas fa-folder-open" style="font-size:.9rem"></i>
+                                    <span>{{ $berita['kategori']['name_kategori'] }}</span>
+                                </a>
                             @endif
+
 
                             <div class="content py-3" id="konten-detail">
                                 {!! $berita['konten'] ?? 'Null' !!}
@@ -551,7 +562,7 @@
 
         });
     
-          $(document).ready(function() {
+        $(document).ready(function() {
             // Global Pagination Variables
             let currentPageLatest = 1;
             const perPageLatest = 5;
@@ -688,12 +699,15 @@
                             
                             let kategoriHtml = "";
                             if (berita.kategori && berita.kategori.name_kategori) {
-                                kategoriHtml = `<div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-folder-open text-primary me-2"></i>
-                                    <a href="#" class="badge bg-primary text-white px-3 py-2 text-decoration-none">
-                                        ${berita.kategori.name_kategori}
-                                    </a>
-                                </div>`;
+                                kategoriHtml = `
+                                    <a href="#"
+                                    class="kategori-badge badge bg-primary text-white d-inline-flex align-items-center gap-1
+                                            px-2 py-1 rounded-pill small my-1"
+                                    data-id="${berita.kategori.id}"
+                                    data-name="${berita.kategori.name_kategori}">
+                                         <i class="fas fa-folder-open" style="font-size:.9rem"></i>
+                                        <span>${berita.kategori.name_kategori}</span>
+                                    </a>`;
                             }
 
                             let tagsHtml = "";
@@ -925,13 +939,17 @@
                             
                             let kategoriHtml = "";
                             if (berita.kategori && berita.kategori.name_kategori) {
-                                kategoriHtml = `<div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-folder-open text-primary me-2"></i>
-                                    <a href="#" class="badge bg-primary text-white px-3 py-2 text-decoration-none">
-                                        ${berita.kategori.name_kategori}
-                                    </a>
-                                </div>`;
+                                kategoriHtml = `
+                                    <a href="#"
+                                    class="kategori-badge badge bg-primary text-white d-inline-flex align-items-center gap-1
+                                            px-2 py-1 rounded-pill small my-1"
+                                    data-id="${berita.kategori.id}"
+                                    data-name="${berita.kategori.name_kategori}">
+                                         <i class="fas fa-folder-open" style="font-size:.9rem"></i>
+                                        <span>${berita.kategori.name_kategori}</span>
+                                    </a>`;
                             }
+
 
                             let tagsHtml = "";
                             if (berita.tags && berita.tags.length > 0) {

@@ -87,7 +87,21 @@
           </div>
 
           <h3 id="modal-judul"  class="title mb-1"></h3>
-          <p  id="modal-author" class="text-muted mb-3"></p>
+         <!-- BLOK AUTHOR -->
+          <div class="mb-3">
+
+            <!-- BARIS 1 – label -->
+            <small class="text-muted d-block mb-2">Dibuat&nbsp;oleh:</small>
+
+            <div class="d-flex align-items-center">
+                <img id="modal-author-photo"
+                    class="rounded-circle d-none"
+                    style="width:48px;height:48px;object-fit:cover;margin-right:10px;"> <!-- 24 px = 1.5 rem -->
+                <span id="modal-author" class="font-weight-bold text-dark"></span>
+            </div>
+
+          </div>
+
          <p id="modal-kategori" class="mb-3">
           <i class="fas fa-folder-open text-primary mr-1"></i>
           <span id="kategori-text">-</span>

@@ -24,6 +24,7 @@ class Article extends Model
         'author',
         'content',
         'photo',
+        'photo_author', 
         'views',
         'likes',
         'status_artikel',

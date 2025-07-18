@@ -38,6 +38,7 @@ class ArticleAdminController extends Controller
                     'status_artikel' => $a->status_artikel,
                     /* ambil satu foto pertama (jika ada) */
                     'photo'          => $a->photo[0] ?? null,
+                      'photo_author'   => $a->photo_author,  
                     /* relasi kategori → bisa null */
                     'kategori'       => $a->kategori
                         ? ['name_kategori' => $a->kategori->name_kategori]
@@ -58,6 +59,8 @@ class ArticleAdminController extends Controller
             'title'   => 'required|string|max:255',
             'author'  => 'nullable|string|max:255',
             'content' => 'required|string',
+
+            'photo_author'  => 'nullable|url|max:255', 
 
             // foto utama (multi)
             'photo'   => 'nullable|array',
@@ -83,7 +86,8 @@ class ArticleAdminController extends Controller
             'title'          => $request->title,
             'author'         => $request->author ?? auth()->user()->name ?? null,
             'content'        => $request->content,
-            'photo'          => $paths,          // cast → array
+            'photo'          => $paths,          
+            'photo_author'  => $request->photo_author,
             'status_artikel' => Article::STATUS_AKTIF,
         ]);
 
@@ -180,27 +184,28 @@ class ArticleAdminController extends Controller
 
     public function showArticle($id)
     {
-        // eager-load relasi tags agar hanya 1 query
         $article = Article::with('tags','kategori')->findOrFail($id);
 
-        // foto → [{path, url}, …]
+        // foto artikel  ➜ [{path,url}, …]
         $photos = collect($article->photo ?? [])
             ->map(fn ($p) => ['path' => $p, 'url' => asset('storage/'.$p)]);
 
         return response()->json([
-            'id'      => $article->id,
-            'title'   => $article->title,
-            'author'  => $article->author,
-            'content' => $article->content,
-            'photos'  => $photos,
-             'tags'    => $article->tags->map(fn ($t) => [
-                        'nama_tags' => $t->nama_tags,
-                        'link'      => $t->link,
-                    ]),
-             'kategori'            => $article->kategori?->name_kategori,
-            'kategori_article_id'=> $article->kategori_article_id, 
+            'id'       => $article->id,
+            'title'    => $article->title,
+            'author'   => $article->author,
+            'content'  => $article->content,
+            'photos'   => $photos,                       // tetap
+            'photo_author' => $article->photo_author,    // ⬅️ NEW
+            'tags'     => $article->tags->map(fn ($t) => [
+                'nama_tags' => $t->nama_tags,
+                'link'      => $t->link,
+            ]),
+            'kategori'            => $article->kategori?->name_kategori,
+            'kategori_article_id' => $article->kategori_article_id,
         ]);
     }
+
 
     /* ---------------- hapus 1 foto lama ---------------- */
     public function deletePhoto(Request $req, $id)
