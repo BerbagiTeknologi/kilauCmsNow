@@ -240,6 +240,8 @@ class ArticleAdminController extends Controller
             'photo'   => 'nullable|array',
             'photo.*' => 'image|mimes:jpg,jpeg,png|max:2048',
 
+            'photo_author'  => 'nullable|url|max:255',
+
             /*  tags  */
             'tags'               => 'nullable|array',
             'tags.*.nama_tags'   => 'required_with:tags|string|max:255',
@@ -261,6 +263,7 @@ class ArticleAdminController extends Controller
             'author'  => $req->author,
             'content' => $req->content,
             'photo'   => array_merge($article->photo ?? [], $paths),
+            'photo_author'  => $req->photo_author,
         ]);
 
         /* ---------- TAGS & PIVOT ---------- */

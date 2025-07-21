@@ -530,7 +530,7 @@
                     </div>
                 </div>
 
-                <div class="row gx-0 py-3">
+                <div class="row gx-0 gy-4 py-3">
                     @foreach ($tentangs as $tentang)
                         <!-- Bagian Teks -->
                         <div class="col-lg-6 d-flex flex-column justify-content-center" data-aos="fade-up"

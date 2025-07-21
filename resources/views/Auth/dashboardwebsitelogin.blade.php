@@ -161,61 +161,47 @@
         }
 
          /* Responsivitas untuk Handphone Kecil */
-        @media screen and (max-width: 400px) {
-            .outer-box {
-                padding-top: 30px;
-                /* Mengurangi padding-top agar elemen lebih rapat ke atas */
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: space-between;
-                width: 100%;
+       /* ========= Handphone kecil & sedang (≤ 600 px) ========= */
+        @media screen and (max-width: 600px){
+        
+            /* ── kontainer: tetap flex‑wrap ── */
+            .outer-box{
+                padding-top:30px;
+                flex-direction:row;         /* baris, bukan kolom */
+                flex-wrap:wrap;             /* agar bisa turun baris */
+                justify-content:space-between;
+                width:100%;
+                gap:12px;                   /* jarak antar card */
             }
-
-            .colored-box {
-                 max-width: 180px;
-                padding: 10px;
+        
+            /* ── setiap card: ambil ±48 % lebar ── */
+            .colored-box{
+                flex:0 0 calc(50% - 12px);  /* 2 kolom, kurangi gap */
+                max-width:calc(50% - 12px);
+                padding:10px;
+                text-align:center;
             }
-
-            .colored-box i {
-                font-size: 20px;
+        
+            /* gambar & ikon menyesuaikan */
+            .colored-box img{ max-width:70%; }
+            .colored-box i{ font-size:20px; }
+        
+            /* judul halaman */
+            .title-wrapper{ top:5px; margin-top:10px; }
+            .title{ font-size:6vw; max-width:90%; }
+        
+            /* footer */
+            .footer{
+                position:fixed; bottom:0; left:0;
+                width:100%; padding:5px 0;
+                background:rgba(0,0,0,.5); color:#fff;
+                font-size:12px; text-align:center;
             }
-
-            .title-wrapper {
-                top: 5px;
-                /* Menurunkan posisi wrapper agar lebih dekat dengan bagian atas */
-                font-size: 1.5rem;
-                width: 100%;
-                text-align: center;
-                margin-top: 10px;
-                /* Menambahkan margin-top agar teks sedikit lebih ke atas */
-            }
-
-            .title {
-                font-size: 6vw;
-                /* Ukuran font lebih kecil berdasarkan lebar layar */
-                word-wrap: break-word;
-                word-break: break-word;
-                text-align: center;
-                max-width: 90%;
-            }
-
-            .footer {
-                background-color: rgba(0, 0, 0, 0.5);
-                color: white;
-                text-align: center;
-                font-size: 12px;
-                padding: 5px 0;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-            }
-
-            
         }
 
+
         /* Responsivitas untuk Handphone Lebih Besar (misalnya, Samsung Galaxy Note) */
-        @media screen and (min-width: 400px) and (max-width: 600px) {
+        @media screen and (min-width: 350px) and (max-width: 600px) {
             .title-wrapper {
                 top: 50px;
                 /* Menurunkan posisi wrapper agar lebih dekat dengan bagian atas */
@@ -223,7 +209,6 @@
                 width: 100%;
                 text-align: center;
                 margin-top: 10px;
-                /* Menambahkan margin-top agar teks sedikit lebih ke atas */
             }
 
             .title {
@@ -288,6 +273,12 @@
                     <img src="{{ asset('assets/img/bah.png') }}" alt="Logo Berbagi Bahagia">
                     <i class="bi bi-heart-fill"></i>
                     <span>BERBAGI BAHAGIA</span>
+                </div>
+                
+                 <div class="colored-box" data-bs-toggle="modal" data-bs-target="#loginModal6">
+                    <img src="{{ asset('assets/img/bt.jpg') }}" alt="Logo Berbagi Teknologi">
+                    <i class="bi bi-heart-fill"></i>
+                    <span>BERBAGI TEKNOLOGI</span>
                 </div>
             </div>
         </div>
@@ -365,6 +356,21 @@
                 <div class="modal-body">
                     <p>Silakan login untuk mengakses fitur berbagi bahagia.</p>
                     <button type="button" class="btn btn-primary" onclick="window.open('https://berbagibahagia.org/', '_blank')">Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+     <div class="modal fade" id="loginModal6" tabindex="-1" aria-labelledby="loginModalLabel6" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel6">Login to Berbagi Teknologi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Silakan login untuk mengakses fitur berbagi teknologi.</p>
+                    <button type="button" class="btn btn-primary" onclick="window.open('https://berbagiteknologi.net/', '_blank')">Login</button>
                 </div>
             </div>
         </div>

@@ -93,5 +93,15 @@ class ArticlePageController extends Controller
         ]);
     }
 
+    public function like(Request $request, Article $article)
+    {
+        $key = 'liked_'.$article->id;          // simpan flag di session
 
+        if (!session()->has($key)) {          // hanya boleh 1× per sesi
+            $article->increment('likes');
+            session([$key => true]);
+        }
+
+        return response()->json(['likes' => $article->likes]);
+    }
 }

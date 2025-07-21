@@ -265,6 +265,13 @@
                             </div>
 
                             <div class="form-group">
+                                <label>Foto Penulis</label><br>
+                                <img id="edit-photo-author-preview" alt="Foto penulis"
+                                    style="max-width:140px;height:auto;border-radius:6px;border:1px solid #ddd;display:none">
+                            </div>
+                            <input type="hidden" name="photo_author" id="edit-photo-author-input">
+
+                            <div class="form-group">
                                 <label>Konten</label>
                                 <div id="editor-edit" style="height:250px;"></div>
                                 <input type="hidden" name="content" id="edit-content">
@@ -767,6 +774,17 @@
                         $('#edit-id').val(res.id);
                         $('#edit-title').val(res.title);
                         $('#edit-author').val(res.author ?? '');
+                        // const rawPhotoAuthor = res.photo_author || '';
+                        const rawPhotoAuthor   = res.photo_author || localStorage.getItem('user_photo') || '';
+                        const fixedPhotoAuthor = fixKilauUrl(rawPhotoAuthor);
+                        $('#edit-photo-author-input').val(fixedPhotoAuthor);
+
+                        if (fixedPhotoAuthor) {
+                            $('#edit-photo-author-preview').attr('src', fixedPhotoAuthor).show();
+                        } else {
+                            $('#edit-photo-author-preview').hide();
+                        }
+
                         quillEdit.root.innerHTML = res.content;
 
                         /* -------- FOTO lama -------- */

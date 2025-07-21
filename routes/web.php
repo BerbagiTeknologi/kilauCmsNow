@@ -107,6 +107,7 @@ Route::prefix('artikel')->group(function () {
     Route::get('/list',    [ArticlePageController::class,'list'])->name('lp.article.list'); // ⬅️ AJAX
     Route::get('/{article:slug}', [ArticlePageController::class,'show'])   // ⬅️ ganti
          ->name('lp.article.show');
+    Route::post('/artikel/{article:slug}/like',[ArticlePageController::class, 'like'])->name('lp.article.like');
 });
 
 

@@ -3,56 +3,46 @@
 @section('style')
 <style>
 /* ================= GALERI STYLE ================ */
-.gallery-wrapper{
-    position:relative;
-    padding:0 60px;                /* ruang untuk panah */
-}
+.gallery-wrapper{position:relative;padding:0 60px;}
 
 .gallery-container{
-    display:flex;
-    gap:20px;
-    overflow-x:auto;
-    padding-block:8px;
-    scroll-behavior:smooth;
-    scroll-snap-type:x mandatory;
-
-    /* sembunyikan scrollbar */
-    scrollbar-width:none;   -ms-overflow-style:none;
+    display:flex;gap:20px;overflow-x:auto;padding-block:8px;
+    scroll-behavior:smooth;scroll-snap-type:x mandatory;
+    scrollbar-width:none;-ms-overflow-style:none;
 }
 .gallery-container::-webkit-scrollbar{display:none}
 
-.card-article{
-    flex:0 0 300px;                /* lebar kartu tetap */
-    scroll-snap-align:start;
-}
+.card-article{flex:0 0 300px;scroll-snap-align:start;}
 
-/* ---- GAMBAR / CAROUSEL DI KARTU ---- */
-.card-article .carousel,
-.card-article img{
-    width:100%;
-    aspect-ratio:3/2;              /* tinggi otomatis ≈ 200 px utk lebar 300 */
-    object-fit:cover;              /* isi penuh, crop secukupnya */
+/* ---------- GAMBAR / CAROUSEL ---------- */
+.img-box{
+    height:200px;
+    width:100%;           
+    overflow:hidden;
     border-radius:.5rem .5rem 0 0;
 }
 
-.badge-cat{
-    background:#0d6efd;
-    font-size:.75rem;
+.img-box img{
+    display:block;       
+    width:100%;         
+    height:auto;          
+    object-fit:contain;  
+    object-position:center;
 }
 
-/* ---- Tombol panah galeri ---- */
-.gallery-arrow{
-    position:absolute;
-    top:50%; transform:translateY(-50%);
-    width:46px; height:46px;
-    background:#fff; border:none;
-    border-radius:50%;
-    box-shadow:0 2px 6px rgba(0,0,0,.25);
-    z-index:10;
-}
-.gallery-arrow-left  { left:-60px; }
-.gallery-arrow-right { right:-60px; }
+/* hapus aturan tinggi-auto lama agar tidak bentrok */
+.card-article .carousel,
+.card-article img{width:100%;border-radius:.5rem .5rem 0 0;}
+
+.badge-cat{background:#0d6efd;font-size:.75rem;}
+
+/* ---------- TOMBOL PANAH ---------- */
+.gallery-arrow{position:absolute;top:50%;transform:translateY(-50%);
+    width:46px;height:46px;background:#fff;border:none;border-radius:50%;
+    box-shadow:0 2px 6px rgba(0,0,0,.25);z-index:10;}
+.gallery-arrow-left{left:-60px;} .gallery-arrow-right{right:-60px;}
 </style>
+
 @endsection
 
 @section('content')
@@ -129,7 +119,9 @@ $(function () {
             thumbs.forEach((src,i)=>{
                 inner += `
                     <div class="carousel-item ${i===0?'active':''}">
-                        <img src="${src}" class="d-block w-100" alt="thumbnail">
+                        <div class="img-box">               <!-- wrapper -->
+                            <img src="${src}" alt="thumbnail">
+                        </div>
                     </div>`;
             });
 
