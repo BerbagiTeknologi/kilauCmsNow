@@ -174,7 +174,9 @@
           @endforelse
         </div>
       </div>
+     
     </div>
+    
 
     {{-- ===== Sidebar ===== --}}
     <div class="col-lg-4">
@@ -195,8 +197,12 @@
         @endforeach
       </div>
     </div>
+
+     @include('LandingPageKilau.Article.komentar')
   </div>
 </div>
+
+
 @endsection
 
 

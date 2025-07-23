@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminPage\ArticleAdminController;
 use App\Http\Controllers\AdminPage\ArticleKategoriAdminController;
+use App\Http\Controllers\AdminPage\ArticleKomentarAdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdminPage\FaqController;
@@ -108,7 +109,18 @@ Route::prefix('artikel')->group(function () {
     Route::get('/{article:slug}', [ArticlePageController::class,'show'])   // ⬅️ ganti
          ->name('lp.article.show');
     Route::post('/artikel/{article:slug}/like',[ArticlePageController::class, 'like'])->name('lp.article.like');
+
+    // Komentar
+    /* ── komentar artikel ─────────────────────────────── */
+    Route::get ('/{article:slug}/komentar', [ArticlePageController::class,'komentar'])
+         ->name('lp.article.comment.index');                             // GET list komentar
+
+    Route::post('/{article:slug}/komentar', [ArticlePageController::class,'komentarStore'])
+         ->name('lp.article.comment.store');    
 });
+
+Route::post('/komentar/{comment}/like', [ArticlePageController::class,'komentarLike'])
+     ->name('lp.comment.like');
 
 
 /* GET IMAGE MITRA */
@@ -165,11 +177,17 @@ Route::middleware(['userAccess:admin'])->prefix('admin')->group(function () {
             Route::delete('/delete/{id}',  [ArticleKategoriAdminController::class,'destroy']);
         });
 
-          /*   Route::prefix('komentar')->group(function() {
-                Route::get('/', [BeritaAdminController::class, 'getKomentarBerita'])->name('getKomentarBerita');
-            });  
-          
-          */
+        Route::prefix('komentar-articles')->group(function () {
+            Route::get('/',            [ArticleKomentarAdminController::class,'index'])
+                ->name('admin.commentArticle.index');
+            Route::get('/list',        [ArticleKomentarAdminController::class,'list'])
+                ->name('admin.commentArticle.list');
+            Route::patch('/status/{id}', [ArticleKomentarAdminController::class,'toggleStatus'])
+                ->name('admin.commentArticle.toggleStatus');
+            Route::delete('/delete/{id}',[ArticleKomentarAdminController::class,'destroy'])
+                ->name('admin.commentArticle.delete');
+        });
+
        
     });
 

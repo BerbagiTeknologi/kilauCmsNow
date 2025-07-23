@@ -158,21 +158,21 @@
                 </li>
 
                 {{-- ==== Artikel Kilau ==== --}}
-                <li class="nav-item dropdown {{ Request::routeIs('article') || Request::routeIs('getKategoriArticle') ? 'active' : '' }}">
+                <li class="nav-item dropdown {{ Request::routeIs('article') || Request::routeIs('getKategoriArticle') || Request::routeIs('admin.commentArticle.index') ? 'active' : '' }}">
                     <a  href="#"
                         class="nav-link dropdown-toggle"
                         id="navbarDropdownArticleKilau"
                         role="button"
                         data-toggle="collapse"
                         data-target="#articleKilauCollapse"
-                        aria-expanded="{{ Request::routeIs('article') || Request::routeIs('getKategoriArticle') ? 'true' : 'false' }}"
+                        aria-expanded="{{ Request::routeIs('article') || Request::routeIs('getKategoriArticle') || Request::routeIs('admin.commentArticle.index') ? 'true' : 'false' }}"
                         aria-controls="articleKilauCollapse">
                         <i class="fas fa-sticky-note"></i>   {{-- ikon baru --}}
                         <p>Artikel Kilau</p>
                     </a>
 
                     <div id="articleKilauCollapse"
-                        class="collapse {{ Request::routeIs('article') || Request::routeIs('getKategoriArticle') ? 'show' : '' }}">
+                        class="collapse {{ Request::routeIs('article') || Request::routeIs('getKategoriArticle') || Request::routeIs('admin.commentArticle.index') ? 'show' : '' }}">
                         <ul class="nav nav-collapse">
                             <li>
                                 <a  href="{{ route('article') }}"
@@ -188,6 +188,14 @@
                                 class="{{ Request::routeIs('getKategoriArticle') ? 'active' : '' }}"
                                 style="{{ Request::routeIs('getKategoriArticle') ? 'color:#1572E8;font-weight:bold;' : '' }}">
                                     <span class="sub-item">Data Kategori Artikel</span>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="{{ route('admin.commentArticle.index') }}"
+                                class="{{ Request::routeIs('admin.commentArticle.index') ? 'active' : '' }}"
+                                style="{{ Request::routeIs('admin.commentArticle.index') ? 'color:#1572E8;font-weight:bold;' : '' }}">
+                                    <span class="sub-item">Data Komentar Artikel</span>
                                 </a>
                             </li>
                            
