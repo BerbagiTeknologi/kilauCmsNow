@@ -115,5 +115,4 @@ class BeritaController extends Controller
         return view('LandingPageKilau.Components.berita-users');
     }
 
-
 }

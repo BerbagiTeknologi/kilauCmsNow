@@ -35,6 +35,7 @@
                                         <tr>
                                             <th>No</th>
                                             <th>Nama Dokumen</th>
+                                            <th>Thumbnail</th>  
                                             <th>File</th>
                                             <th>Status</th>
                                             <th>Aksi</th>
@@ -45,6 +46,15 @@
                                             <tr>
                                                 <td>{{ $loop->iteration }}</td>
                                                <td> {{ strip_tags( $document->text_document) }}</td>
+                                               <td>
+                                                    @if ($document->thumbnail)
+                                                        <img src="{{ Storage::url($document->thumbnail) }}"
+                                                            alt="thumbnail"
+                                                            style="max-width:90px;max-height:90px;object-fit:cover">
+                                                    @else
+                                                        –
+                                                    @endif
+                                                </td>
                                                 <td>
                                                     @if ($document->files)
                                                         @php
@@ -162,6 +172,7 @@
                                                 </div>
                                             </div>
 
+                                            {{-- Edit Document --}}
                                             <div class="modal fade" id="editDokumenModal{{ $document->id }}" tabindex="-1"
                                                 role="dialog" aria-labelledby="editDokumenModalLabel{{ $document->id }}" aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
@@ -180,6 +191,21 @@
                                                                     <label for="text_document_{{ $document->id }}">Nama Dokumen</label>
                                                                     <input type="text" name="text_document" class="form-control" id="text_document_{{ $document->id }}" value="{{ old('text_document', $document->text_document) }}" required>
                                                                 </div>
+
+                                                                <div class="form-group">
+                                                                    <label>Thumbnail (gambar)</label>
+                                                                    <input type="file" name="thumbnail" class="form-control" accept="image/*">
+                                                                    <small class="form-text text-muted">Kosongkan jika tidak ingin mengubah thumbnail.</small>
+
+                                                                    @if ($document->thumbnail)
+                                                                        <div class="mt-2">
+                                                                            <strong>Thumbnail saat ini:</strong><br>
+                                                                            <img src="{{ Storage::url($document->thumbnail) }}" alt="thumbnail"
+                                                                                style="max-width:120px;max-height:120px;object-fit:cover">
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+
                                             
                                                                 <!-- File Upload -->
                                                                 <div class="form-group">
@@ -187,6 +213,8 @@
                                                                     <small class="form-text text-muted">
                                                                         * Pastikan file yang diupload berformat PDF agar dapat dilihat di Flipbook.
                                                                     </small>
+
+                                                                    
                                             
                                                                     <!-- Menampilkan file yang sudah ada sebelumnya -->
                                                                     @if ($document->files)
@@ -285,6 +313,12 @@
                         <div class="form-group">
                             <label>Nama Dokumen</label>
                             <input type="text" name="text_document" class="form-control" required>
+                        </div>
+                         {{-- THUMBNAIL --}}
+                        <div class="form-group">
+                            <label>Thumbnail (gambar)</label>
+                            <input type="file" name="thumbnail" class="form-control" accept="image/*">
+                            <small class="form-text text-muted">Opsional. JPG/PNG/GIF, max 2 MB.</small>
                         </div>
                         <div class="form-group">
                             <!-- Tambahkan multiple pada input file -->

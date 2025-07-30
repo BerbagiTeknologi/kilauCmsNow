@@ -100,7 +100,8 @@ Route::get('/check-email', [ContactController::class, 'checkEmail']);
 // Route::get('/berita/{id}', [BeritaController::class, 'show'])->name('berita.show');
 Route::get('/berita/{judul}', [BeritaController::class, 'show'])->name('berita.show');
 Route::get('/dokumen', [DokumenController::class, 'dokumen'])->name('dokumen');
-Route::get('/dokumen/share/{id}', [DokumenController::class, 'share'])->name('dokumen.share');
+// Route::get('/dokumen/share/{id}', [DokumenController::class, 'share'])->name('dokumen.share');
+Route::get('/dokumen/share/{slug}',[DokumenController::class, 'share'])  ->name('dokumen.share');
 
 // GET DATA ARTIKEL
 Route::prefix('artikel')->group(function () {
@@ -109,6 +110,7 @@ Route::prefix('artikel')->group(function () {
     Route::get('/{article:slug}', [ArticlePageController::class,'show'])   // ⬅️ ganti
          ->name('lp.article.show');
     Route::post('/artikel/{article:slug}/like',[ArticlePageController::class, 'like'])->name('lp.article.like');
+    Route::get('/sidebar-latest/{kategori}',[ArticlePageController::class,'sidebarLatest'])->name('lp.article.sidebarLatest');
 
     // Komentar
     /* ── komentar artikel ─────────────────────────────── */

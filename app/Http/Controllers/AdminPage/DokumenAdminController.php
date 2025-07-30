@@ -30,6 +30,8 @@ class DokumenAdminController extends Controller
              'files' => 'required|array',
              'files.*' => 'file|mimes:pdf|max:5048', // Hanya menerima file PDF
              'text_document' => 'nullable|string|max:1000',
+
+             'thumbnail'  => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
          ]);
  
          $filePaths = [];
@@ -39,10 +41,16 @@ class DokumenAdminController extends Controller
                  $filePaths[] = $file->store('documents', 'public');
              }
          }
+
+        $thumbPath = null;
+        if ($request->hasFile('thumbnail')) {
+            $thumbPath = $request->file('thumbnail')->store('documents/thumbnails', 'public');
+        }
  
          // Simpan data dokumen ke database (hanya menyimpan file)
          $document = new Document();
          $document->files = json_encode($filePaths);
+         $document->thumbnail       = $thumbPath; 
          $document->text_document = $request->input('text_document');
          $document->status_document = Document::DOKUMEN_AKTIF;
          $document->save();
@@ -55,48 +63,58 @@ class DokumenAdminController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Validasi input
+        /* ---------- VALIDASI ---------- */
         $request->validate([
             'text_document' => 'required|string|max:1000',
-            'files' => 'nullable|array', // File bisa kosong jika hanya update judul
-            'files.*' => 'file|mimes:pdf|max:5048', // Validasi setiap file (pdf)
+
+            /* dokumen PDF (boleh kosong) */
+            'files'   => 'nullable|array',
+            'files.*' => 'file|mimes:pdf|max:5048',
+
+            /* thumbnail gambar (opsional) */
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
         ]);
-    
-        // Cari dokumen berdasarkan ID
+
+        /* ---------- AMBIL RECORD ---------- */
         $document = Document::findOrFail($id);
-    
-        // Update judul dokumen
-        $document->update([
-            'text_document' => $request->text_document,
-        ]);
-    
-        // Jika ada file yang diunggah, hapus file lama dan simpan yang baru
+
+        /* ---------- UPDATE TEKS ---------- */
+        $document->text_document = $request->text_document;
+
+        /* ---------- GANTI FILE DOKUMEN ---------- */
         if ($request->hasFile('files')) {
-            // Hapus file lama jika ada
+            /* hapus file lama (jika ada) */
             if ($document->files) {
-                $oldFiles = json_decode($document->files, true);
-                foreach ($oldFiles as $oldFile) {
-                    if (Storage::disk('public')->exists($oldFile)) {
-                        Storage::disk('public')->delete($oldFile);
-                    }
+                foreach (json_decode($document->files, true) as $oldFile) {
+                    Storage::disk('public')->delete($oldFile);
                 }
             }
-    
-            // Simpan file baru
-            $filePaths = [];
+
+            /* simpan file baru */
+            $paths = [];
             foreach ($request->file('files') as $file) {
-                $filePath = $file->store('documents', 'public');
-                $filePaths[] = $filePath;
+                $paths[] = $file->store('documents', 'public');
             }
-    
-            // Simpan path file baru ke database
-            $document->update([
-                'files' => json_encode($filePaths),
-            ]);
+            $document->files = json_encode($paths);
         }
-    
+
+        /* ---------- GANTI THUMBNAIL ---------- */
+        if ($request->hasFile('thumbnail')) {
+            /* hapus thumbnail lama (jika ada) */
+            if ($document->thumbnail) {
+                Storage::disk('public')->delete($document->thumbnail);
+            }
+            /* simpan thumbnail baru */
+            $thumbPath          = $request->file('thumbnail')->store('documents/thumbnails', 'public');
+            $document->thumbnail = $thumbPath;
+        }
+
+        /* ---------- SIMPAN ---------- */
+        $document->save();
+
         return redirect()->route('document')->with('success', 'Dokumen berhasil diperbarui.');
     }
+
     
 
 

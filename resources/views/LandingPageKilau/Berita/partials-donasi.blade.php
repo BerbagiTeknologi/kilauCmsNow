@@ -1,3 +1,14 @@
+@php
+    use App\Models\Program;                     // model program Anda
+    /*  jika $programs belum ada, ambil 6 program aktif sebagai default  */
+    $programs = isset($programs)
+        ? $programs
+        : Program::where('status_program', Program::PROGRAM_AKTIF)
+                 ->latest()->take(6)
+                 ->get(['id','judul','thumbnail_image']);
+@endphp
+
+
 <style>
     @media (max-width:1024px){
         .col-lg-4,

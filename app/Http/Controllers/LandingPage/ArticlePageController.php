@@ -5,7 +5,9 @@ namespace App\Http\Controllers\LandingPage;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use App\Models\KomentarArticles;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 
 class ArticlePageController extends Controller
 {
@@ -52,9 +54,10 @@ class ArticlePageController extends Controller
     /* ---------- halaman detail ---------- */
     public function show(Article $article)
     {
+        // Tambah view
         $article->increment('views');
 
-        /* foto utama (maks 3) */
+        /* ---------- ambil foto utama (maks 3) ---------- */
         $photos = collect($article->photo ?? [])
                     ->take(3)
                     ->map(fn ($p) => asset('storage/'.$p))
@@ -65,8 +68,11 @@ class ArticlePageController extends Controller
             $photos->push($m[1]);
         }
 
-        /* 5 artikel terbaru (kecuali yg sedang dibuka) + kategori */
-        $latest = Article::with('kategori:id,name_kategori')           // ← eager load
+        /* ---------- hitung total komentar artikel ---------- */
+        $commentCount = KomentarArticles::where('id_articles', $article->id)->count();
+
+        /* ---------- sidebar “artikel terbaru / per-kategori” ---------- */
+        $latest = Article::with('kategori:id,name_kategori')
                 ->where('status_artikel', Article::STATUS_AKTIF)
                 ->where('id', '!=', $article->id)
                 ->latest('created_at')
@@ -77,22 +83,47 @@ class ArticlePageController extends Controller
                             ?? (preg_match('/<img[^>]+src="([^">]+)"/i',$a->content,$m) ? $m[1] : null);
 
                     return [
-                        'title' => $a->title,
-                        'slug'  => $a->slug,
-                        'thumb' => $thumb ? asset('storage/'.$thumb)
+                        'title'   => $a->title,
+                        'slug'    => $a->slug,
+                        'thumb'   => $thumb ? asset('storage/'.$thumb)
                                             : asset('assets_admin/img/noimage.jpg'),
-                        'kategori' => $a->kategori->name_kategori ?? '-',
+                        'kat_id'  => $a->kategori_article_id,          // ⬅️  ditambahkan
+                        'kategori'=> $a->kategori->name_kategori ?? '-',
                     ];
                 });
 
+        $page       = 1;          // hanya satu halaman pendek
+        $perPage    = 6;
+        $campaigns  = collect();
+
+        try {
+            $resp = Http::withoutRedirecting()->get(
+                'https://berbagibahagia.org/api/getcampung',
+                ['page'=>$page,'per_page'=>$perPage,'status'=>1]
+            );
+
+            if ($resp->successful()) {
+                $campaigns = collect($resp['data']);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error fetching campaign: '.$e->getMessage());
+        }
+
+
+        $firstPhoto = $photos->first() ?: asset('assets_admin/img/noimage.jpg');
+
         return view('LandingPageKilau.Article.show',[
-            'article'     => $article->load('tags','kategori'),
-            'photos'      => $photos,
-            'photo_author'=> $article->photo_author, 
-            'placeholder' => asset('assets_admin/img/noimage.jpg'),
-            'latest'      => $latest,
+            'article'      => $article->load('tags','kategori'),
+            'photos'       => $photos,
+            'photo_author' => $article->photo_author,
+            'placeholder'  => asset('assets_admin/img/noimage.jpg'),
+            'latest'       => $latest,
+            'commentCount' => $commentCount,           // ⬅️  kirim ke view
+            'ogImage'      => $firstPhoto,
+            'campaigns'        => $campaigns,
         ]);
     }
+
 
     public function like(Request $request, Article $article)
     {
@@ -105,6 +136,36 @@ class ArticlePageController extends Controller
 
         return response()->json(['likes' => $article->likes]);
     }
+
+    // App\Http\Controllers\LandingPage\ArticlePageController.php
+    public function sidebarLatest(?int $catId = null)
+    {
+        $query = Article::with('kategori:id,name_kategori')
+                ->where('status_artikel', Article::STATUS_AKTIF)
+                ->latest('created_at');
+
+        if ($catId) {
+            $query->where('kategori_article_id', $catId);
+        }
+
+        return $query->take(5)
+            ->get(['id','title','slug','photo','content','kategori_article_id'])
+            ->map(function($a){
+                $thumb = collect($a->photo ?? [])->first()
+                    ?? (preg_match('/<img[^>]+src="([^">]+)"/i',$a->content,$m)? $m[1] : null);
+
+                return [
+                    'id'      => $a->id,
+                    'slug'    => $a->slug,
+                    'title'   => $a->title,
+                    'thumb'   => $thumb ? asset('storage/'.$thumb)
+                                        : asset('assets_admin/img/noimage.jpg'),
+                    'kat_id'  => $a->kategori_article_id,
+                    'kategori'=> $a->kategori->name_kategori ?? '-',
+                ];
+            });
+    }
+
 
     // Bagian Function Komentar
      /* =====================================================
