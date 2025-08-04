@@ -35,19 +35,9 @@ use App\Http\Controllers\AdminPage\SettingsMenuController;
 use App\Http\Controllers\AdminPage\LegalitasLembagaController;
 use App\Http\Controllers\AdminPage\ProgramReferallController;
 use App\Http\Controllers\LandingPage\ArticlePageController;
+use App\Http\Controllers\LandingPage\ArticlePageExternalController;
 use App\Http\Controllers\LandingPage\PointReferallController;
 use App\Http\Controllers\LandingPage\TentangKamiAdminController;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
 
 /* Route::get('/', function () {
     return redirect('beranda');
@@ -119,6 +109,34 @@ Route::prefix('artikel')->group(function () {
 
     Route::post('/{article:slug}/komentar', [ArticlePageController::class,'komentarStore'])
          ->name('lp.article.comment.store');    
+});
+
+Route::prefix('artikel-external')
+     ->name('lp.article.external.')               // <— NAME PREFIX!
+     ->group(function () {
+
+    // Halaman list + modal
+    Route::get('/',
+        [ArticlePageExternalController::class, 'index'])
+        ->name('index');                          // lp.article.external.index
+
+    // AJAX list JSON
+    Route::get('/list',
+        [ArticlePageExternalController::class, 'list'])
+        ->name('list');                           // lp.article.external.list
+
+    Route::get('/kategori-article',
+        [ArticlePageExternalController::class,'categories'])
+        ->name('kategori');
+
+    Route::post('/upload-image-article',
+               [ArticlePageExternalController::class,'uploadImage'])->name('uploadImage');
+
+    // Store dari modal
+    Route::post('/',
+        [ArticlePageExternalController::class, 'store'])
+        ->name('store');   
+                               // lp.article.external.store
 });
 
 Route::post('/komentar/{comment}/like', [ArticlePageController::class,'komentarLike'])

@@ -278,68 +278,67 @@
 
 
 @section('scripts')
-    <script src="{{ asset('assets_flipbox/js/libs/jquery.min.js') }}"></script>
-    <script src="{{ asset('assets_flipbox/js/dflip.min.js') }}"></script>
-    {{-- Bootstrap bundle --}}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('assets_flipbox/js/libs/jquery.min.js') }}"></script>
+<script src="{{ asset('assets_flipbox/js/dflip.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-    /* ================== 100 % VANILLA JS ================== */
-    document.addEventListener('DOMContentLoaded', () => {
+<script>
+document.addEventListener('DOMContentLoaded', () => {
 
-        /* ------ PANAH SCROLL ------ */
-        const track = document.getElementById('docTrack');
-        const width = 380;
-        document.getElementById('docLeft')?.addEventListener('click', () => (track.scrollLeft -= width));
-        document.getElementById('docRight')?.addEventListener('click', () => (track.scrollLeft += width));
+    /* ==== panah scroll (tidak berubah) ==== */
+    const track = document.getElementById('docTrack');
+    const CARD  = 380;
+    document.getElementById('docLeft') ?.addEventListener('click', () => track.scrollLeft -= CARD);
+    document.getElementById('docRight')?.addEventListener('click', () => track.scrollLeft += CARD);
 
-        /* ------ SHARE ------ */
-        document.querySelectorAll('.btn-share').forEach(btn => {
-            btn.addEventListener('click', e => {
-                e.stopPropagation();
-                const url = btn.dataset.link;
-                if (navigator.share) {
-                    navigator.share({ title: 'Dokumen', url }).catch(() => {});
-                } else {
-                    navigator.clipboard?.writeText(url);
-                    window.open(url, '_blank');
-                    alert('Link disalin.');
-                }
-            });
+    /* ==== share (tidak berubah) ==== */
+    document.querySelectorAll('.btn-share').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+            e.stopPropagation();
+            const url = btn.dataset.link;
+            if (navigator.share) navigator.share({title:'Dokumen',url}).catch(()=>{});
+            else {
+                navigator.clipboard?.writeText(url);
+                window.open(url,'_blank');
+                alert('Link disalin.');
+            }
         });
-
-        /* ------ AMBIL docId & fullscreen ------ */
-        const qs     = new URLSearchParams(location.search);
-        let   docId  = qs.get('id');
-        const isSharePage = !docId;                // /share/slug -> tak ada ?id=
-        if (!docId) docId = document.querySelector('._df_book')?.dataset.id;
-
-        const fullscreen = qs.get('fullscreen') === 'true' || isSharePage;
-
-        if (!docId) return;                        // tak ada dokumen, berhenti
-
-        /* ------ INISIALISASI DFLIP ------ */
-        const flipEl = document.querySelector(`._df_book[data-id="${docId}"]`);
-        if (flipEl && window.jQuery?.fn?.dFlip) {
-            try { window.jQuery(flipEl).dFlip({ height: 400, webgl: true, fullscreen: false }); }
-            catch (err) { console.error('[dFlip]', err); }
-        }
-
-        /* ------ Auto-fullscreen (opsional) ------ */
-        if (fullscreen && flipEl) {
-            flipEl.addEventListener('df-ready', e => e.detail.instance.toggleFullscreen(), { once: true });
-            /* fallback */
-            setTimeout(() => {
-                const inst = window.jQuery?.data ? window.jQuery(flipEl).data('dflip') : null;
-                inst?.toggleFullscreen();
-            }, 1000);
-        }
-
-        /* ------ TAMPILKAN MODAL INFO ------ */
-        const modalEl = document.getElementById('infoModal');
-        if (modalEl) {
-            bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static' }).show();
-        }
     });
-    </script>
+
+    /* ==== tentukan docId ==== */
+    const qs        = new URLSearchParams(location.search);
+    let   docId     = qs.get('id');
+    const sharePage = !docId;                          // /share/slug
+    if (!docId) docId = document.querySelector('._df_book')?.dataset.id;
+    if (!docId) return;
+
+    const flipEl = document.querySelector(`._df_book[data-id="${docId}"]`);
+    if (!flipEl) return;
+
+    /* ==== inisialisasi DearFlip ==== */
+    let flipInstance = null;
+    if (window.jQuery?.fn?.dFlip) {
+        window.jQuery(flipEl)
+            .on('df-ready', (_, inst) => { flipInstance = inst; })   // simpan instance ketika siap
+            .dFlip({
+                height      : 400,
+                webgl       : true,
+                fullscreen  : true   // WAJIB true agar toggle berfungsi
+            });
+    }
+
+    /* ==== tampilkan modal ==== */
+    const modalEl = document.getElementById('infoModal');
+    if (modalEl) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop:'static' });
+        modal.show();
+
+        /* klik “Mengerti” → fullscreen */
+        modalEl.querySelector('[data-bs-dismiss="modal"]')?.addEventListener('click', () => {
+            flipInstance?.toggleFullscreen();
+        });
+    }
+
+});
+</script>
 @endsection

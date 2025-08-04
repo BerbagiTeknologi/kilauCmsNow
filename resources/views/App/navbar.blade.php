@@ -75,9 +75,15 @@
                         <span class="profile-avatar rounded-circle bg-secondary text-white d-inline-flex justify-content-center align-items-center" style="width: 40px; height: 40px; font-weight: bold;"></span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                          <li class="nav-item d-none" id="beritaAndaNav">
+                          {{-- <li class="nav-item d-none" id="beritaAndaNav">
                                 <a class="dropdown-item text-white fw-normal" href="{{ route('getBeritaUsers') }}">
                                     <i class="fas fa-newspaper me-1"></i> Berita Anda
+                                </a>
+                          </li> --}}
+
+                            <li class="nav-item d-none" id="articleAndaNav">
+                                <a class="dropdown-item text-white fw-normal" href="{{ route('lp.article.external.index') }}">
+                                    <i class="fas fa-newspaper me-1"></i> Cerita Anda
                                 </a>
                           </li>
 
@@ -149,8 +155,8 @@
                 var poinNav = document.getElementById('poinAndaNav');
                 if (poinNav) poinNav.classList.remove('d-none');
 
-                var beritaAndaNav = document.getElementById('beritaAndaNav');
-                if (beritaAndaNav) beritaAndaNav.classList.remove('d-none');
+                var articleAndaNav = document.getElementById('articleAndaNav');
+                if (articleAndaNav) articleAndaNav.classList.remove('d-none');
             }
         }
         
