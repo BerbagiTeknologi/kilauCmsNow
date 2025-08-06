@@ -50,7 +50,7 @@
           <div class="mb-3">
               <label class="form-label">Judul</label>
               <input type="text" name="judul" id="judul-input" class="form-control" required>
-              <small id="seo-title-analysis" class="form-text text-muted"></small>
+              <small id="seo-title-analysis" class="form-text"></small>
           </div>
 
           <div class="mb-3">
@@ -66,7 +66,7 @@
           <div class="mb-3">
               <label class="form-label">Konten</label>
               <textarea name="konten" id="konten-create" class="form-control d-none"></textarea>
-              <small id="seo-content-analysis" class="form-text text-muted"></small>
+              <small id="seo-content-analysis" class="form-text"></small>
           </div>
 
           <div class="row">
@@ -186,15 +186,41 @@ $('#createArticleModal').on('shown.bs.modal',()=>{
    loadKategori();     // muat dropdown setiap kali modal dibuka
 });
 
-/* — SEO hint — */
-$('#judul-input').on('input',function(){
-  const n=this.value.trim().length;
-  $('#seo-title-analysis').text(n<50?`Terlalu pendek (${n}/50)`:n>70?`Terlalu panjang (${n})`:'Judul optimal');
+/* SEO */
+/* ---------- helper warna ---------- */
+function setHint($el, msg, status){
+  $el.text(msg)
+     .removeClass('text-danger text-success text-warning')
+     .addClass(
+        status === 'good' ? 'text-success' :
+        status === 'warn' ? 'text-warning' :
+                            'text-danger'
+     );
+}
+
+/* ---------- Hint Judul ---------- */
+$('#judul-input').on('input', function () {
+  const len = this.value.trim().length;
+  if (len < 50)          setHint($('#seo-title-analysis'),
+                                 `Terlalu pendek (${len}/50 karakter)`, 'bad');
+  else if (len <= 70)    setHint($('#seo-title-analysis'),
+                                 `Judul optimal (${len} karakter)`,     'good');
+  else                   setHint($('#seo-title-analysis'),
+                                 `Terlalu panjang (${len} karakter)`,   'warn');
 });
-ql.on('text-change',()=>{
-  const w=ql.getText().trim().split(/\s+/).filter(Boolean).length;
-  $('#seo-content-analysis').text(w<300?`Konten ${w}/300 kata`:`Konten cukup (${w})`);
-});
+
+/* ---------- Hint Konten ---------- */
+function updateCreateContentHint(){
+  const words = ql.getText().trim().split(/\s+/).filter(Boolean).length;
+  if (words < 300)          setHint($('#seo-content-analysis'),
+                                    `Terlalu pendek (${words}/300 kata)`, 'bad');
+  else if (words <= 700)    setHint($('#seo-content-analysis'),
+                                    `Konten optimal (${words} kata)`,     'good');
+  else                      setHint($('#seo-content-analysis'),
+                                    `Terlalu panjang (${words} kata)`,    'warn');
+}
+ql.on('text-change', updateCreateContentHint);
+
 
 /* — Tag dinamis — */
 let tagIdx=1;

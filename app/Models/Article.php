@@ -64,6 +64,21 @@ class Article extends Model
                 $article->slug = $slug;
             }
         });
+
+        static::created(function ($article) {
+            // hindari penulisan berulang jika seeder / factory menon-aktifkan observers
+            if (!app()->runningInConsole()) {
+                \App\Models\ArticleNotification::create([
+                    'article_id' => $article->id,
+                    'message'    => sprintf(
+                        'Artikel “%s” berhasil dibuat oleh %s',
+                        $article->title,
+                        $article->author ?? 'system'
+                    ),
+                    'status'     => \App\Models\ArticleNotification::UNREAD,
+                ]);
+            }
+        });
     }
 
     /* ---------- helper & relasi ------------- */
@@ -89,6 +104,13 @@ class Article extends Model
             'kategori_article_id'
         );
     }
+
+    // di Article.php
+    public function notifications()
+    {
+        return $this->hasMany(ArticleNotification::class, 'article_id');
+    }
+
 
     /* ---------- konstanta status ------------- */
     public const STATUS_AKTIF     = 'Aktif';

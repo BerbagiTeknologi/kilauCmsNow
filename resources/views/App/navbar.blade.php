@@ -81,6 +81,12 @@
                                 </a>
                           </li> --}}
 
+                          <li class="nav-item d-none" id="usersAndaNav">
+                                <a class="dropdown-item text-white fw-normal" href="{{ route('getDataUsersProfile') }}">
+                                    <i class="fas fa-user me-1"></i> Profile Anda
+                                </a>
+                          </li>
+
                             <li class="nav-item d-none" id="articleAndaNav">
                                 <a class="dropdown-item text-white fw-normal" href="{{ route('lp.article.external.index') }}">
                                     <i class="fas fa-newspaper me-1"></i> Cerita Anda
@@ -152,6 +158,9 @@
                 }
 
                 // 👉 Tampilkan tombol Poin Anda
+                var usersAndaNav = document.getElementById('usersAndaNav');
+                if (usersAndaNav)  usersAndaNav.classList.remove('d-none');
+
                 var poinNav = document.getElementById('poinAndaNav');
                 if (poinNav) poinNav.classList.remove('d-none');
 

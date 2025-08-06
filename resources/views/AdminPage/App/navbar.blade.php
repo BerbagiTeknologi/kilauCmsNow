@@ -37,6 +37,43 @@
                         </form>
                     </ul>
                 </li>
+                
+                <li class="nav-item dropdown me-2">
+                    <a class="nav-link position-relative" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-bell fa-lg"></i>
+                        @if($notifCount ?? 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ $notifCount }}
+                            </span>
+                        @endif
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end animated fadeIn shadow-sm"
+                        style="min-width: 320px">
+                        <h6 class="dropdown-header fw-semibold">Notifikasi Artikel</h6>
+
+                        @forelse($notifList ?? [] as $n)
+                            <li class="px-3 py-2 small {{ $n->status === 'unread' ? 'fw-bold' : '' }}">
+                                {{ $n->message }}<br>
+                                <span class="text-muted fst-italic">
+                                    {{ $n->created_at->diffForHumans() }}
+                                </span>
+                            </li>
+                            @if(!$loop->last)<li><hr class="dropdown-divider my-0"></li>@endif
+                        @empty
+                            <li class="px-3 py-2 small text-muted">Belum ada notifikasi</li>
+                        @endforelse
+
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-center small" href="#">
+                                Lihat semua
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <li class="nav-item topbar-user dropdown hidden-caret">
                     <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#"
                         aria-expanded="false">

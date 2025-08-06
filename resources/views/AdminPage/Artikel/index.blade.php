@@ -169,7 +169,9 @@
                             {{-- Judul --}}
                             <div class="form-group">
                                 <label>Judul</label>
-                                <input type="text" name="title" class="form-control" required>
+                                {{-- <input type="text" name="title" class="form-control" required> --}}
+                                <input type="text" name="title" id="title-input" class="form-control" required>
+                                <small id="seo-title-analysis" class="form-text text-muted"></small>
                             </div>
 
                             {{-- Penulis (opsional) --}}
@@ -187,8 +189,11 @@
 
                             <div class="form-group">
                                 <label>Konten</label>
+                                {{-- <input type="hidden" name="content" id="content-input">
+                                <div id="editor-create" style="min-height:260px"></div> --}}
                                 <input type="hidden" name="content" id="content-input">
                                 <div id="editor-create" style="min-height:260px"></div>
+                                <small id="seo-content-analysis" class="form-text text-muted"></small>
                             </div>
 
                             <div class="form-group">
@@ -257,6 +262,7 @@
                             <div class="form-group">
                                 <label>Judul</label>
                                 <input type="text" name="title" id="edit-title" class="form-control" required>
+                                <small id="seo-edit-title" class="form-text"></small>
                             </div>
 
                             <div class="form-group">
@@ -275,6 +281,7 @@
                                 <label>Konten</label>
                                 <div id="editor-edit" style="height:250px;"></div>
                                 <input type="hidden" name="content" id="edit-content">
+                                <small id="seo-edit-content" class="form-text"></small>
                             </div>
 
                             <div class="form-group">
@@ -332,38 +339,38 @@
 
     <script>
         /* --------------------------------------------------
-        GLOBAL CSRF HEADER (sekali saja di layout)
-        -------------------------------------------------- */
+                        GLOBAL CSRF HEADER (sekali saja di layout)
+                        -------------------------------------------------- */
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
 
-        function fixKilauUrl(url){
-            if(!url) return '';
-            return url.includes('/kilau/upload/')
-                ? url
-                : url.replace('/upload/','/kilau/upload/');
+        function fixKilauUrl(url) {
+            if (!url) return '';
+            return url.includes('/kilau/upload/') ?
+                url :
+                url.replace('/upload/', '/kilau/upload/');
         }
 
         /* -----------------------------------------------------------------
         1. Isi otomatis kolom "author" saat modal CREATE dibuka
         ----------------------------------------------------------------- */
         const AUTHOR_KEY = 'user_name'; // kunci di localStorage
-        const PHOTO_KEY  = 'user_photo'; 
+        const PHOTO_KEY = 'user_photo';
         const katURL = "{{ url('admin/article-kilau/kategori-article/list') }}";
 
         $('#createArticleModal').on('shown.bs.modal', () => {
             // const author = localStorage.getItem(AUTHOR_KEY) || '';
             // const photo  = localStorage.getItem(PHOTO_KEY)   || '';
             const author = localStorage.getItem(AUTHOR_KEY) || '';
-            const raw    = localStorage.getItem(PHOTO_KEY)  || '';
-            const photo  = fixKilauUrl(raw);          // ← selalu benar
+            const raw = localStorage.getItem(PHOTO_KEY) || '';
+            const photo = fixKilauUrl(raw); // ← selalu benar
 
             // kalau ternyata raw salah, perbarui localStorage sekali saja
             if (photo !== raw) localStorage.setItem(PHOTO_KEY, photo);
-            
+
             $('#author-input').val(author);
             $('#photo-author-input').val(photo);
 
@@ -532,8 +539,8 @@
         }
 
         /* ==================================================
-       TAGS – tambah / hapus baris input dinamis
-       ================================================== */
+           TAGS – tambah / hapus baris input dinamis
+           ================================================== */
         let tagIdx = 0;
 
         $('#btn-add-tag').on('click', () => {
@@ -610,9 +617,48 @@
     </script>
 
     <script>
+        /* Form Edit Rekomendasi */
+        /* util: atur teks + warna bootstrap */
+        function setHint($el, msg, status) {
+            $el.text(msg)
+                .removeClass('text-danger text-success text-warning')
+                .addClass(status === 'good' ? 'text-success' :
+                    status === 'warn' ? 'text-warning' :
+                    'text-danger');
+        }
+
+        /* ========= Judul ========= */
+        $('#title-input').on('input', function() {
+            const len = this.value.trim().length;
+
+            if (len < 50) setHint($('#seo-title-analysis'),
+                `Terlalu pendek (${len}/50 karakter)`, 'bad');
+            else if (len <= 70) setHint($('#seo-title-analysis'),
+                `Judul optimal (${len} karakter)`, 'good');
+            else setHint($('#seo-title-analysis'),
+                `Terlalu panjang (${len} karakter)`, 'warn');
+        });
+
+        /* ========= Konten ========= */
+        function updateContentHint() {
+            const words = quillCreate.getText().trim()
+                .split(/\s+/).filter(Boolean).length;
+
+            if (words < 300) setHint($('#seo-content-analysis'),
+                `Terlalu pendek (${words}/300 kata)`, 'bad');
+            else if (words <= 700) setHint($('#seo-content-analysis'),
+                `Konten optimal (${words} kata)`, 'good');
+            else setHint($('#seo-content-analysis'),
+                `Terlalu panjang (${words} kata)`, 'warn');
+        }
+        quillCreate.on('text-change', updateContentHint);
+    </script>
+
+
+    <script>
         /* =====================================================
-        GLOBAL CSRF HEADER (satu kali saja di layout)
-        ===================================================== */
+                        GLOBAL CSRF HEADER (satu kali saja di layout)
+                        ===================================================== */
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -749,6 +795,35 @@
 
             const katURL = "{{ url('admin/article-kilau/kategori-article/list') }}";
 
+            /* SEO */
+            $('#edit-title').on('input', function() {
+                const len = this.value.trim().length;
+                const $lbl = $('#seo-edit-title');
+                if (len < 50) setHint($lbl, `Terlalu pendek (${len}/50)`, 'bad');
+                else if (len <= 70) setHint($lbl, `Judul optimal (${len})`, 'good');
+                else setHint($lbl, `Terlalu panjang (${len})`, 'warn');
+            });
+
+            /* ========= Hint Konten (edit) ========= */
+            function updateEditContentHint() {
+                const words = quillEdit.getText().trim().split(/\s+/).filter(Boolean).length;
+                const $lbl = $('#seo-edit-content');
+                if (words < 300) setHint($lbl, `Terlalu pendek (${words}/300)`, 'bad');
+                else if (words <= 700) setHint($lbl, `Konten optimal (${words})`, 'good');
+                else setHint($lbl, `Terlalu panjang (${words})`, 'warn');
+            }
+            quillEdit.on('text-change', updateEditContentHint);
+
+            /* ========= Utility setHint (gunakan yg sama dgn modal create) ========= */
+            function setHint($el, msg, status) {
+                $el.text(msg)
+                    .removeClass('text-danger text-success text-warning')
+                    .addClass(status === 'good' ? 'text-success' :
+                        status === 'warn' ? 'text-warning' :
+                        'text-danger');
+            }
+
+
             /* =====================================================
             BUKA MODAL EDIT
             ===================================================== */
@@ -775,7 +850,8 @@
                         $('#edit-title').val(res.title);
                         $('#edit-author').val(res.author ?? '');
                         // const rawPhotoAuthor = res.photo_author || '';
-                        const rawPhotoAuthor   = res.photo_author || localStorage.getItem('user_photo') || '';
+                        const rawPhotoAuthor = res.photo_author || localStorage.getItem('user_photo') ||
+                            '';
                         const fixedPhotoAuthor = fixKilauUrl(rawPhotoAuthor);
                         $('#edit-photo-author-input').val(fixedPhotoAuthor);
 
@@ -786,6 +862,7 @@
                         }
 
                         quillEdit.root.innerHTML = res.content;
+                        updateEditContentHint();
 
                         /* -------- FOTO lama -------- */
                         fotoLama = res.photos; // [{path,url}, …]
@@ -1141,7 +1218,8 @@
                         $('#modal-kategori #kategori-text').text(res.kategori ?? '-');
 
                         if (res.photo_author) {
-                            $('#modal-author-photo').attr('src', res.photo_author).removeClass('d-none');;
+                            $('#modal-author-photo').attr('src', res.photo_author).removeClass(
+                                'd-none');;
                         } else {
                             $('#modal-author-photo').addClass('d-none');
                         }
@@ -1164,8 +1242,9 @@
 
                         /* res.photos kini array objek {path,url} */
                         const images = res.photos.length ?
-                            res.photos.map(p => p.url) :
-                            ['{{ asset('assets_admin/img/noimage.jpg') }}'];
+                            res.photos.map(p => p.url) : [
+                                '{{ asset('assets_admin/img/noimage.jpg') }}'
+                            ];
 
                         images.forEach((src, i) => {
                             wrap.append(`

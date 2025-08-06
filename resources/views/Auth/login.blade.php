@@ -10,6 +10,7 @@
             background-color: #f8f9fa;
             overflow: hidden;
         }
+
         .login-background {
             flex: 1.5;
             background-image: url('{{ asset('assets/img/loginpageke2.png') }}');
@@ -18,6 +19,7 @@
             height: 100%;
             position: relative;
         }
+
         .login-background::before {
             content: '';
             position: absolute;
@@ -26,6 +28,7 @@
             width: 100%;
             height: 100%;
         }
+
         .overlay-text {
             position: absolute;
             top: 80px;
@@ -41,6 +44,7 @@
             border-radius: 10px;
             white-space: nowrap;
         }
+
         /* Styling form login */
         .login-form {
             flex: 1;
@@ -51,6 +55,7 @@
             background-color: rgba(255, 255, 255, 0.95);
             height: 100vh;
         }
+
         /* Styling untuk card login */
         .login-form .card {
             width: 100%;
@@ -67,6 +72,7 @@
             position: relative;
             margin-top: 5rem;
         }
+
         /* Styling untuk logo */
         .login-logo {
             position: absolute;
@@ -78,10 +84,12 @@
             border-radius: 50%;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
+
         .login-logo img {
             height: 100px;
             width: 100px;
         }
+
         /* Font yang lebih tebal untuk judul */
         .card h3 {
             font-weight: bold;
@@ -90,74 +98,90 @@
             margin-bottom: 1rem;
             text-align: center;
         }
+
         /* Pesan pertanyaan ditempatkan di bawah form */
         .account-check {
             font-size: 0.95rem;
             text-align: center;
             margin-top: 1rem;
         }
+
         .account-check a {
             color: #1363c6;
             text-decoration: none;
             font-weight: bold;
         }
+
         .account-check a:hover {
             text-decoration: underline;
         }
+
         /* Styling untuk form control dan input */
         .form-group label {
             font-weight: bold;
             margin-bottom: 0.5rem;
             display: block;
         }
+
         .form-group {
             margin-bottom: 1.5rem;
         }
+
         .form-control {
             padding: 0.75rem;
             border-radius: 8px;
         }
+
         .form-control:focus {
             box-shadow: none;
             border-color: #1363c6;
         }
+
         .login-footer {
             display: flex;
             justify-content: center;
             align-items: center;
             margin-top: 2rem;
         }
+
         .login-footer p {
             margin-bottom: 0;
             font-size: 0.9rem;
             color: #777;
         }
+
         /* Styling untuk ukuran layar kecil */
         @media (max-width: 768px) {
             .login-background {
                 display: none;
             }
+
             .login-page {
                 justify-content: center;
             }
+
             .login-form {
                 flex: 1;
                 padding: 2rem;
                 max-width: 100%;
             }
+
             .login-logo {
                 top: -50px;
             }
+
             .login-logo img {
                 height: 60px;
                 width: 60px;
             }
         }
+
         @media (max-width: 576px) {
             .login-form .card {
                 padding: 1.5rem;
                 max-width: 100%;
             }
+
             .login-footer p {
                 font-size: 0.8rem;
             }
@@ -196,14 +220,17 @@
                     @csrf
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="Masukkan Alamat Email" required>
+                        <input type="email" class="form-control" id="email" name="email"
+                            placeholder="Masukkan Alamat Email" required>
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan Password" required>
+                        <input type="password" class="form-control" id="password" name="password"
+                            placeholder="Masukkan Password" required>
                     </div>
                     <div class="d-grid gap-3">
-                        <button type="submit" class="btn" style="background-color: #1363c6; color:white;">Submit</button>
+                        <button type="submit" class="btn"
+                            style="background-color: #1363c6; color:white;">Submit</button>
                     </div>
                 </form>
 
@@ -223,14 +250,14 @@
 @section('scripts')
     <script>
         $('#login-form').submit(function(event) {
-            event.preventDefault();  // Mencegah form submit secara default
+            event.preventDefault(); // Mencegah form submit secara default
 
             var email = $('#email').val();
             var password = $('#password').val();
             var csrfToken = $('input[name="_token"]').val();
 
             $.ajax({
-                url: "{{ route('loginProses') }}",  // URL untuk controller login
+                url: "{{ route('loginProses') }}", // URL untuk controller login
                 method: "POST",
                 data: {
                     _token: csrfToken,
@@ -243,6 +270,9 @@
                         if (res.token) {
                             localStorage.setItem('user_token', res.token);
                         }
+                        if (res.user && res.user.id) localStorage.setItem('user_id', res.user.id);
+                        if (res.user && res.user.email) localStorage.setItem('user_email', res.user
+                            .email);
                         if (res.user && res.user.name) {
                             localStorage.setItem('user_name', res.user.name);
                         }
@@ -250,7 +280,8 @@
                             localStorage.setItem('user_level', res.user.level);
                         }
                         if (res.user && res.user.referral_code) {
-                            localStorage.setItem('user_referral_code', res.user.referral_code); // ← ini yang baru
+                            localStorage.setItem('user_referral_code', res.user
+                            .referral_code); // ← ini yang baru
                         }
                         if (res.user && res.user.photo) {
                             localStorage.setItem('user_photo', fixKilauUrl(res.user.photo));
@@ -285,11 +316,11 @@
     </script>
 
     <script>
-        function fixKilauUrl(url){
-            if(!url) return '';
-            return url.includes('/kilau/upload/')
-                ? url
-                : url.replace('/upload/','/kilau/upload/');
+        function fixKilauUrl(url) {
+            if (!url) return '';
+            return url.includes('/kilau/upload/') ?
+                url :
+                url.replace('/upload/', '/kilau/upload/');
         }
     </script>
 @endsection

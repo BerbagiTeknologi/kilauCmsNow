@@ -12,6 +12,10 @@ class LoginController extends Controller
         return view('Auth.login');
     }
 
+    public function getDataUsersProfile(){
+        return view('Auth.profile');
+    }
+
     /* public function loginProses(Request $request)
     {
         // Validasi input
@@ -104,6 +108,9 @@ class LoginController extends Controller
                     'redirect_url' => $redirectUrl,
                     'token' => session('user_token'),
                     'user' => [
+                         'id'            => $data['berhasil']['id'],      // NEW
+                        'name'          => session('user_name'),
+                        'email'         => session('user_email'),
                         'name' => session('user_name'),
                         'level' => session('user_level'),
                         'referral_code' => session('user_referral_code'),

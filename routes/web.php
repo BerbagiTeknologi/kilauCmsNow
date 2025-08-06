@@ -46,6 +46,7 @@ use App\Http\Controllers\LandingPage\TentangKamiAdminController;
 
 /* Authentication */
 Route::get('/login', [LoginController::class, 'login'])->name('login');
+Route::get('/get-users', [LoginController::class, 'getDataUsersProfile'])->name('getDataUsersProfile');
 Route::post('/loginprosess', [LoginController::class, 'loginProses'])->name('loginProses');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/register', [LoginController::class, 'register'])->name('register');
