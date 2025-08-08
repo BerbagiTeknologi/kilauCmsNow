@@ -111,6 +111,10 @@ class Article extends Model
         return $this->hasMany(ArticleNotification::class, 'article_id');
     }
 
+    public function histories()
+    {
+        return $this->hasMany(ArticleUserHistory::class, 'article_id');
+    }
 
     /* ---------- konstanta status ------------- */
     public const STATUS_AKTIF     = 'Aktif';

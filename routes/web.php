@@ -124,7 +124,22 @@ Route::prefix('artikel-external')
     // AJAX list JSON
     Route::get('/list',
         [ArticlePageExternalController::class, 'list'])
-        ->name('list');                           // lp.article.external.list
+        ->name('list');                           
+
+    Route::get('/my-articles',  // url bebas
+        [ArticlePageExternalController::class, 'myArticles']
+    )->name('mylist');
+
+    Route::get('/{id}/edit',
+        [ArticlePageExternalController::class, 'edit'])
+        ->whereNumber('id')
+        ->name('edit');                 // lp.article.external.edit
+
+    // ==== U P D A T E  ====
+    Route::put('/{id}',
+        [ArticlePageExternalController::class, 'update'])
+        ->whereNumber('id')
+        ->name('update');   
 
     Route::get('/kategori-article',
         [ArticlePageExternalController::class,'categories'])

@@ -7,9 +7,12 @@ use App\Models\TagArticle;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\KategoriArticle;
+use App\Models\ArticleUserHistory;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Intervention\Image\ImageManager;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ArticlePageExternalController extends Controller
 {
@@ -44,6 +47,54 @@ class ArticlePageExternalController extends Controller
                                 ? ['id' => $a->kategori->id,
                                    'name_kategori' => $a->kategori->name_kategori]
                                 : null,
+            ];
+        });
+
+        return response()->json([
+            'data'       => $data,
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+            ],
+        ]);
+    }
+
+    public function myArticles(Request $request)
+    {
+        $userId = session('user_id');          // ← di‐set saat login
+        if (!$userId) {
+            return response()->json([
+                'data' => [],
+                'pagination' => null,
+                'error' => 'Unauthenticated',
+            ], 401);
+        }
+
+        $perPage = (int) $request->input('per_page', 6);
+        $search  = $request->input('search', '');
+
+        /* ambil artikel yang ada di tabel history milik user */
+        $paginator = Article::with('kategori:id,name_kategori')
+            ->whereHas('histories', fn ($q) => $q->where('external_user_id', $userId))
+            ->when($search, fn ($q) => $q->where('title', 'like', "%{$search}%"))
+            ->orderByDesc('created_at')
+            ->paginate($perPage);
+
+        /* transform sama persis dgn list() lama */
+        $data = $paginator->getCollection()->transform(function ($a) {
+            return [
+                'id'      => $a->id,
+                'title'   => $a->title,
+                'slug'    => $a->slug,
+                'author'  => $a->author,
+                'tanggal' => $a->created_at->toDateString(),
+                'status_artikel' => $a->status_artikel,
+                'photos'  => collect($a->photo)
+                            ->map(fn ($p) => asset('storage/' . $p)),
+                'kategori' => $a->kategori
+                    ? ['id' => $a->kategori->id,
+                    'name_kategori' => $a->kategori->name_kategori]
+                    : null,
             ];
         });
 
@@ -121,6 +172,19 @@ class ArticlePageExternalController extends Controller
             'created_at'     => $val['tanggal'],
         ]);
 
+         $externalUserId = session('user_id');
+        if (!$externalUserId) {
+            return response()->json([
+                'error' => 'User tidak terautentikasi',
+            ], 401);
+        }
+
+        ArticleUserHistory::create([
+            'article_id'       => $article->id,
+            'external_user_id' => $externalUserId,
+            'token'            => session('user_token'),
+        ]);
+
         /* pivot tags */
         if (!empty($val['tags'])) {
             $tagIds = collect($val['tags'])->map(function ($t) {
@@ -134,4 +198,92 @@ class ArticlePageExternalController extends Controller
 
         return response()->json(['success' => true, 'msg' => 'Artikel eksternal tersimpan!']);
     }
+
+    public function edit($id)
+    {
+        $userId = session('user_id');
+
+        $article = Article::with(['kategori:id,name_kategori', 'tags:id,nama_tags,link'])
+            ->where('id', $id)
+            ->whereHas('histories',
+                fn ($q) => $q->where('external_user_id', $userId))
+            ->firstOrFail();
+
+        return response()->json([
+            'id'       => $article->id,
+            'kategori' => $article->kategori_article_id,
+            'title'    => $article->title,
+            'author'   => $article->author,
+            'tanggal'  => $article->created_at->toDateString(),
+            'content'  => $article->content,
+            'photos'   => collect($article->photo)
+                            ->map(fn ($p) => asset('storage/'.$p)),
+            'tags'     => $article->tags->map(fn ($t) => [
+                            'nama' => $t->nama_tags,
+                            'link' => $t->link,
+                        ]),
+        ]);
+    }
+
+    /* ---------- UPDATE ---------- */
+    public function update(Request $request, $id)
+    {
+        $userId = session('user_id');
+
+        $article = Article::where('id', $id)
+            ->whereHas('histories',
+                fn ($q) => $q->where('external_user_id', $userId))
+            ->firstOrFail();
+
+        $val = $request->validate([
+            'kategori_article_id' => ['required', Rule::exists('kategori_article', 'id')],
+            'judul'   => 'required|string|max:255',
+            'author'  => 'nullable|string|max:255',
+            'konten'  => 'required|string',
+            'tanggal' => 'required|date',
+            'photo'   => 'nullable|array|max:3',
+            'photo.*' => 'image|mimes:jpg,jpeg,png|max:2048',
+            'tags'            => 'nullable|array',
+            'tags.*.nama'     => 'required_with:tags|string|max:255',
+            'tags.*.link'     => 'required_with:tags|url|max:255',
+        ]);
+
+        /* ------------ TRANSAKSI ------------- */
+        DB::transaction(function () use ($article, $val, $request) {
+
+            /* foto baru (jika di-upload) */
+            if ($request->hasFile('photo')) {
+                // Hapus foto lama? -> uncomment bila perlu
+                // foreach ($article->photo as $old) Storage::disk('public')->delete($old);
+
+                $paths = [];
+                foreach ($request->file('photo') as $file) {
+                    $paths[] = $file->store('articles', 'public');
+                }
+                $article->photo = $paths;
+            }
+
+            $article->update([
+                'kategori_article_id' => $val['kategori_article_id'],
+                'title'          => $val['judul'],
+                'author'         => $val['author'] ?? $article->author,
+                'content'        => $val['konten'],
+                'created_at'     => $val['tanggal'],
+            ]);
+
+            /* tags */
+            if (array_key_exists('tags', $val)) {
+                $tagIds = collect($val['tags'])->map(function ($t) {
+                    return TagArticle::updateOrCreate(
+                        ['nama_tags' => $t['nama']],
+                        ['link'      => $t['link']]
+                    )->id;
+                });
+                $article->tags()->sync($tagIds);
+            }
+        });
+
+        return response()->json(['success' => true, 'msg' => 'Artikel berhasil di-update!']);
+    }
 }
+

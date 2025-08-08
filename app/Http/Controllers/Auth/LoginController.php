@@ -89,6 +89,7 @@ class LoginController extends Controller
             if (isset($data['token'])) {
                 // Simpan data ke session
                 session([
+                    'user_id'    => $data['berhasil']['id'], 
                     'user_name'  => $data['berhasil']['nama'],
                     'user_email' => $data['berhasil']['email'],
                     'user_role'  => $data['berhasil']['cms'] ?? null,  // bisa null
