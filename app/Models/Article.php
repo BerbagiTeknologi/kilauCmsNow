@@ -29,6 +29,7 @@ class Article extends Model
         'likes',
         'status_artikel',
         'kategori_article_id',
+        'feedback', 
     ];
 
     /* ---------- casting kolom --------------- */
@@ -36,6 +37,7 @@ class Article extends Model
         'photo' => 'array',
         'views' => 'integer',
         'likes' => 'integer',
+        'feedback' => 'array', 
     ];
 
     /* ---------- route-model binding pakai slug */
@@ -118,5 +120,6 @@ class Article extends Model
 
     /* ---------- konstanta status ------------- */
     public const STATUS_AKTIF     = 'Aktif';
+    public const STATUS_PERBAIKI     = 'Perlu Diperbaiki';
     public const STATUS_NON_AKTIF = 'Tidak Aktif';
 }

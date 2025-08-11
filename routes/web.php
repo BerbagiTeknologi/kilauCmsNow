@@ -130,16 +130,20 @@ Route::prefix('artikel-external')
         [ArticlePageExternalController::class, 'myArticles']
     )->name('mylist');
 
-    Route::get('/{id}/edit',
-        [ArticlePageExternalController::class, 'edit'])
-        ->whereNumber('id')
-        ->name('edit');                 // lp.article.external.edit
+    // ========= DETAIL (BARU) =========
+    Route::get('/{id}', [ArticlePageExternalController::class, 'show'])
+         ->whereNumber('id')
+         ->name('show');
 
-    // ==== U P D A T E  ====
-    Route::put('/{id}',
-        [ArticlePageExternalController::class, 'update'])
-        ->whereNumber('id')
-        ->name('update');   
+    // form edit (JSON untuk isi modal edit)
+    Route::get('/{id}/edit', [ArticlePageExternalController::class, 'edit'])
+         ->whereNumber('id')
+         ->name('edit');
+
+    // update
+    Route::put('/{id}', [ArticlePageExternalController::class, 'update'])
+         ->whereNumber('id')
+         ->name('update'); 
 
     Route::get('/kategori-article',
         [ArticlePageExternalController::class,'categories'])
@@ -194,8 +198,9 @@ Route::middleware(['userAccess:admin'])->prefix('admin')->group(function () {
             Route::post('/create', [ArticleAdminController::class, 'createArticle'])->name('createArticle');
             Route::put('/update/{id}', [ArticleAdminController::class,'updateArticle'])
              ->name('article.update');
-              Route::patch('/status/{id}', [ArticleAdminController::class, 'toggleStatus'])
+            Route::patch('/status/{id}', [ArticleAdminController::class, 'toggleStatus'])
              ->name('article.toggleStatus');
+             Route::post('/{id}/feedback', [ArticleAdminController::class, 'storeFeedback'])->name('article.feedback.store');
             Route::delete('/photo/{id}',[ArticleAdminController::class,'deletePhoto'])
              ->name('article.photo.delete');
             Route::delete('/delete',[ArticleAdminController::class, 'deleteArticle'])->name('deleteArticle');

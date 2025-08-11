@@ -67,7 +67,7 @@
 
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item text-center small" href="#">
+                            <a class="dropdown-item text-center small" href="{{ route('article') }}">
                                 Lihat semua
                             </a>
                         </li>

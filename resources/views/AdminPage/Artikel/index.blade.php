@@ -328,6 +328,37 @@
             </div>
         </div>
 
+        {{-- ========== MODAL FEEDBACK ========= --}}
+<div class="modal fade" id="feedbackModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="feedback-form" class="modal-content">
+      @csrf
+      <input type="hidden" id="fb-article-id">
+      <div class="modal-header">
+        <h5 class="modal-title">Kirim Feedback Artikel</h5>
+        {{-- BS5: btn-close + data-bs-dismiss --}}
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label">Judul</label>
+          <input type="text" id="fb-article-title" class="form-control" readonly>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Feedback</label>
+          <textarea id="fb-text" class="form-control" rows="4" required placeholder="Tuliskan feedback..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        {{-- BS5: data-bs-dismiss --}}
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Tutup</button>
+        <button class="btn btn-primary" id="fb-submit" type="submit">Kirim</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
 
     </div>
 @endsection
@@ -339,8 +370,8 @@
 
     <script>
         /* --------------------------------------------------
-                        GLOBAL CSRF HEADER (sekali saja di layout)
-                        -------------------------------------------------- */
+                                        GLOBAL CSRF HEADER (sekali saja di layout)
+                                        -------------------------------------------------- */
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -657,8 +688,8 @@
 
     <script>
         /* =====================================================
-                        GLOBAL CSRF HEADER (satu kali saja di layout)
-                        ===================================================== */
+                                        GLOBAL CSRF HEADER (satu kali saja di layout)
+                                        ===================================================== */
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -1008,6 +1039,12 @@
 
     <script>
         $(function() {
+            // CSRF untuk PATCH/POST
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
 
             const fmtID = new Intl.DateTimeFormat('id-ID', {
                 day: '2-digit',
@@ -1015,25 +1052,24 @@
                 year: 'numeric'
             });
 
-
             const baseToggleUrl = "{{ url('admin/article-kilau/article/status') }}";
+            const baseFeedbackUrl = "{{ url('admin/article-kilau/article') }}"; // /{id}/feedback
 
-            /* ============ STATE ============ */
             const perPage = 10;
             let currentPage = 1;
             let currentSearch = '';
             let allData = [];
 
-            /* ============ LOAD PERTAMA ============ */
+            // Load pertama
             fetchArticles();
 
-            /* ----- live search ----- */
-            $('#search').keyup(function() {
+            // Live search
+            $('#search').on('keyup', function() {
                 currentSearch = $(this).val();
                 fetchArticles(1, currentSearch);
             });
 
-            /* ---- Tombol delete (SweetAlert confirm) ---- */
+            // Hapus (SweetAlert)
             $(document).on('click', '.delete-article', function() {
                 const id = $(this).data('id');
                 const row = $(`#row-${id}`);
@@ -1048,53 +1084,57 @@
                     confirmButtonText: 'Ya, hapus!',
                     cancelButtonText: 'Batal'
                 }).then(result => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: "{{ route('deleteArticle') }}",
-                            type: 'DELETE',
-                            data: {
-                                id
-                            },
-                            success: res => {
-                                // hapus baris tabel &/atau refresh list
-                                row.remove();
-                                Swal.fire('Terhapus!', res.message, 'success');
-                            },
-                            error: () => Swal.fire('Gagal',
-                                'Terjadi kesalahan saat menghapus.', 'error')
-                        });
-                    }
+                    if (!result.isConfirmed) return;
+                    $.ajax({
+                        url: "{{ route('deleteArticle') }}",
+                        type: 'DELETE',
+                        data: {
+                            id
+                        },
+                        success: res => {
+                            row.remove();
+                            Swal.fire('Terhapus!', res.message, 'success');
+                        },
+                        error: () => Swal.fire('Gagal', 'Terjadi kesalahan saat menghapus.',
+                            'error')
+                    });
                 });
             });
 
-            // Update Status Approval
+            // Toggle Status → pilih 3 opsi
             $(document).on('click', '.toggle-status', function() {
                 const id = $(this).data('id');
+                const current = $(this).data('status') || 'Aktif';
 
                 Swal.fire({
                     icon: 'question',
-                    title: 'Ubah Status?',
-                    text: 'Artikel akan di-aktif/non-aktif-kan.',
+                    title: 'Ubah Status Artikel',
+                    input: 'select',
+                    inputOptions: {
+                        'Aktif': 'Aktif',
+                        'Perlu Diperbaiki': 'Perlu Diperbaiki',
+                        'Tidak Aktif': 'Tidak Aktif'
+                    },
+                    inputValue: current,
                     showCancelButton: true,
-                    confirmButtonText: 'Ya, ubah'
+                    confirmButtonText: 'Simpan'
                 }).then(result => {
-
                     if (!result.isConfirmed) return;
-
                     $.ajax({
-                        url: `${baseToggleUrl}/${id}`, // ← tambahkan id di runtime
-                        type: 'POST', // form-urlencoded
+                        url: `${baseToggleUrl}/${id}`,
+                        type: 'PATCH',
                         data: {
-                            _method: 'PATCH'
-                        }, // spoof menjadi PATCH
+                            status: result.value
+                        },
                         success: res => {
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Berhasil',
                                 text: res.message,
-                                timer: 1500,
+                                timer: 1200,
                                 showConfirmButton: false
-                            }).then(() => fetchArticles(currentPage, currentSearch));
+                            });
+                            fetchArticles(currentPage, currentSearch);
                         },
                         error: xhr => {
                             const msg = xhr.responseJSON?.message ??
@@ -1105,34 +1145,70 @@
                 });
             });
 
-            /* ============ PAGINATION CLICK (delegasi) ============ */
+            // Buka modal feedback
+            $(document).on('click', '.give-feedback', function() {
+                const id = $(this).data('id');
+                const title = $(this).data('title') || '';
+                $('#fb-article-id').val(id);
+                $('#fb-article-title').val(title);
+                $('#fb-text').val('');
+                $('#feedbackModal').modal('show'); // close pakai tombol X atau "Tutup"
+            });
+
+            // Submit feedback (close modal setelah sukses)
+            $('#feedback-form').on('submit', function(e) {
+                e.preventDefault();
+                const id = $('#fb-article-id').val();
+                const $btn = $('#fb-submit');
+                $btn.prop('disabled', true).text('Mengirim...');
+
+                $.post(`${baseFeedbackUrl}/${id}/feedback`, {
+                        feedback: $('#fb-text').val()
+                    })
+                    .done(res => {
+                        $('#feedbackModal').modal('hide'); // TUTUP modal
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Terkirim',
+                            text: res.message,
+                            timer: 1300,
+                            showConfirmButton: false
+                        });
+                    })
+                    .fail(xhr => {
+                        const msg = xhr.responseJSON?.message ?? 'Gagal mengirim feedback.';
+                        Swal.fire('Error', msg, 'error');
+                    })
+                    .always(() => {
+                        $btn.prop('disabled', false).text('Kirim');
+                    });
+            });
+
+            // Pagination click (delegasi)
             $(document).on('click', '.page-number', function(e) {
                 e.preventDefault();
                 currentPage = $(this).data('page');
                 renderCurrentPage();
             });
 
-            /* ============ FETCH & CACHE ============ */
+            // Fetch data
             function fetchArticles(page = 1, search = '') {
                 $.get("{{ route('article.list') }}", {
                     search
                 }, function(data) {
-                    allData = data; // array of articles
+                    allData = data;
                     currentPage = page;
                     renderCurrentPage();
                 }).fail(() => Swal.fire('Error', 'Gagal mengambil data artikel.', 'error'));
             }
 
-            /* ============ RENDER PAGE AKTIF ============ */
             function renderCurrentPage() {
                 const start = (currentPage - 1) * perPage;
                 const pageData = allData.slice(start, start + perPage);
-
                 renderTable(pageData, start);
                 renderPagination(Math.ceil(allData.length / perPage));
             }
 
-            /* ----- table body ----- */
             function renderTable(data, startIndex) {
                 let html = '';
                 let no = startIndex + 1;
@@ -1140,68 +1216,76 @@
 
                 data.forEach(a => {
                     const foto = a.photo || defaultImg;
-                    const badge = a.status_artikel === 'Aktif' ? 'badge-success' : 'badge-danger';
+
+                    // Badge 3 status
+                    let badgeClass = 'badge-secondary';
+                    if (a.status_artikel === 'Aktif') badgeClass = 'badge-success';
+                    else if (a.status_artikel === 'Perlu Diperbaiki') badgeClass =
+                    'badge-warning text-dark';
+                    else if (a.status_artikel === 'Tidak Aktif') badgeClass = 'badge-danger';
 
                     const tgl = fmtID.format(new Date(a.created_at));
 
                     html += `
-                    <tr id="row-${a.id}">
-                        <td>${no++}</td>
-                        <td>${a.title}</td>
-                        <td>${a.author ?? '-'}</td>
-                        <td>${tgl}</td>
-                        <td>
-                                <span class="badge ${badge} d-inline-block text-center"
-                                    style="min-width:100px; line-height:28px; padding:4px 0;">
-                                    ${a.status_artikel}
-                                </span>
-                            </td>
-                         <td>${a.kategori?.name_kategori ?? '-'}</td>
-                        <td>
-                            <div class="btn-group gap-2">
-                                <button class="btn btn-primary btn-sm rounded-circle p-2 show-article"
-                                        data-id="${a.id}" title="Detail"> <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-info btn-sm rounded-circle p-2 toggle-status"
-                                        data-id="${a.id}" title="Ubah Status">
-                                    <i class="fas fa-exchange-alt"></i>
-                                </button>
-                            <button class="btn btn-warning btn-sm rounded-circle p-2 edit-article"
-                                        data-id="${a.id}" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-danger btn-sm rounded-circle p-2 delete-article" data-id="${a.id}" title="Hapus"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>`;
+            <tr id="row-${a.id}">
+                <td>${no++}</td>
+                <td>${a.title}</td>
+                <td>${a.author ?? '-'}</td>
+                <td>${tgl}</td>
+                <td>
+                    <span class="badge ${badgeClass} d-inline-block text-center"
+                          style="min-width:130px; line-height:28px; padding:4px 0;">
+                        ${a.status_artikel}
+                    </span>
+                </td>
+                <td>${a.kategori?.name_kategori ?? '-'}</td>
+                <td>
+                    <div class="btn-group gap-2">
+                        <button class="btn btn-primary  btn-sm rounded-circle p-2 show-article"
+                                data-id="${a.id}" title="Detail">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-info     btn-sm rounded-circle p-2 toggle-status"
+                                data-id="${a.id}" data-status="${a.status_artikel}" title="Ubah Status">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                        <button class="btn btn-secondary btn-sm rounded-circle p-2 give-feedback"
+                                data-id="${a.id}" data-title="${a.title}" title="Feedback">
+                            <i class="fas fa-comment-dots"></i>
+                        </button>
+                        <button class="btn btn-warning  btn-sm rounded-circle p-2 edit-article"
+                                data-id="${a.id}" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger   btn-sm rounded-circle p-2 delete-article"
+                                data-id="${a.id}" title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
                 });
 
                 $('#article-body').html(html);
             }
 
-            /* ----- pagination ul ----- */
             function renderPagination(lastPage) {
                 let html = '';
                 if (lastPage > 1) {
                     for (let i = 1; i <= lastPage; i++) {
-
                         const isActive = i === currentPage ? 'active' : '';
                         const txtWhite = i === currentPage ? 'text-white' : '';
-
                         html += `
-                        <li class="page-item ${isActive}">
-                            <a href="#"
-                            class="page-link page-number ${txtWhite}"
-                            data-page="${i}">
-                            ${i}
-                            </a>
-                        </li>`;
+                <li class="page-item ${isActive}">
+                    <a href="#" class="page-link page-number ${txtWhite}" data-page="${i}">${i}</a>
+                </li>`;
                     }
                 }
                 $('#pagination').html(html);
             }
         });
     </script>
+
 
     <script>
         $(function() {

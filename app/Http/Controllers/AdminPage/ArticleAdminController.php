@@ -289,27 +289,44 @@ class ArticleAdminController extends Controller
         ]);
     }
 
-     public function toggleStatus(Request $req, int $id): JsonResponse
+     public function toggleStatus(Request $request, $id): JsonResponse
     {
-        $article = Article::find($id);
+        $request->validate([
+            'status' => 'required|string|in:' .
+                implode(',', [
+                    Article::STATUS_AKTIF,
+                    Article::STATUS_PERBAIKI,
+                    Article::STATUS_NON_AKTIF
+                ]),
+        ]);
 
-        if (!$article) {
-            return response()->json(['message' => 'Artikel tidak ditemukan'], 404);
-        }
-
-        // Toggle
-        $newStatus = $article->status_artikel === Article::STATUS_AKTIF
-                     ? Article::STATUS_NON_AKTIF
-                     : Article::STATUS_AKTIF;
-
-        $article->update(['status_artikel' => $newStatus]);
+        $article = Article::findOrFail($id);
+        $article->status_artikel = $request->status;
+        $article->save();
 
         return response()->json([
             'status'  => 'success',
-            'message' => "Status diubah menjadi {$newStatus}.",
-            'newStatus' => $newStatus,
+            'message' => "Status artikel diperbarui menjadi: {$article->status_artikel}",
         ]);
     }
+
+    // === Simpan feedback (hanya teks) ke kolom articles.feedback
+    public function storeFeedback(Request $request, $id): JsonResponse
+    {
+        $request->validate([
+            'feedback' => 'required|string|min:3',
+        ]);
+
+        $article = Article::findOrFail($id);
+        $article->feedback = $request->input('feedback'); // overwrite isi sebelumnya
+        $article->save();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Feedback berhasil disimpan.',
+        ]);
+    }
+
  
     public function deleteArticle(Request $request)
     {

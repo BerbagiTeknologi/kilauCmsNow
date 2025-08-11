@@ -89,6 +89,7 @@ class ArticlePageExternalController extends Controller
                 'author'  => $a->author,
                 'tanggal' => $a->created_at->toDateString(),
                 'status_artikel' => $a->status_artikel,
+                'feedback' => $a->feedback,
                 'photos'  => collect($a->photo)
                             ->map(fn ($p) => asset('storage/' . $p)),
                 'kategori' => $a->kategori
@@ -199,14 +200,51 @@ class ArticlePageExternalController extends Controller
         return response()->json(['success' => true, 'msg' => 'Artikel eksternal tersimpan!']);
     }
 
+    public function show($id)
+    {
+        $userId = session('user_id');
+        if (!$userId) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        $article = Article::with(['tags:id,nama_tags,link', 'kategori:id,name_kategori'])
+            ->where('id', $id)
+            ->whereHas('histories', fn ($q) => $q->where('external_user_id', $userId))
+            ->firstOrFail();
+
+        // foto: [{path,url}, ...]
+        $photos = collect($article->photo ?? [])->map(fn ($p) => [
+            'path' => $p,
+            'url'  => asset('storage/'.$p),
+        ]);
+
+        return response()->json([
+            'id'        => $article->id,
+            'title'     => $article->title,
+            'author'    => $article->author,
+            'content'   => $article->content,
+            'photos'    => $photos,
+            'photo_author' => $article->photo_author,
+            'tags'      => $article->tags->map(fn ($t) => [
+                'nama_tags' => $t->nama_tags,
+                'link'      => $t->link,
+            ]),
+            'kategori'            => $article->kategori?->name_kategori,
+            'kategori_article_id' => $article->kategori_article_id,
+            'status_artikel'      => $article->status_artikel,  // ← penting
+            'feedback'            => $article->feedback,        // ← penting
+            'tanggal'             => optional($article->created_at)->toDateString(),
+        ]);
+    }
+
+
     public function edit($id)
     {
         $userId = session('user_id');
 
         $article = Article::with(['kategori:id,name_kategori', 'tags:id,nama_tags,link'])
             ->where('id', $id)
-            ->whereHas('histories',
-                fn ($q) => $q->where('external_user_id', $userId))
+            ->whereHas('histories', fn ($q) => $q->where('external_user_id', $userId))
             ->firstOrFail();
 
         return response()->json([
@@ -216,14 +254,16 @@ class ArticlePageExternalController extends Controller
             'author'   => $article->author,
             'tanggal'  => $article->created_at->toDateString(),
             'content'  => $article->content,
-            'photos'   => collect($article->photo)
-                            ->map(fn ($p) => asset('storage/'.$p)),
+            'photos'   => collect($article->photo)->map(fn ($p) => asset('storage/'.$p)),
             'tags'     => $article->tags->map(fn ($t) => [
                             'nama' => $t->nama_tags,
                             'link' => $t->link,
                         ]),
+            'status_artikel' => $article->status_artikel, // ← tambahan
+            'feedback'       => $article->feedback,       // ← tambahan
         ]);
     }
+
 
     /* ---------- UPDATE ---------- */
     public function update(Request $request, $id)
@@ -231,8 +271,7 @@ class ArticlePageExternalController extends Controller
         $userId = session('user_id');
 
         $article = Article::where('id', $id)
-            ->whereHas('histories',
-                fn ($q) => $q->where('external_user_id', $userId))
+            ->whereHas('histories', fn ($q) => $q->where('external_user_id', $userId))
             ->firstOrFail();
 
         $val = $request->validate([
@@ -248,14 +287,9 @@ class ArticlePageExternalController extends Controller
             'tags.*.link'     => 'required_with:tags|url|max:255',
         ]);
 
-        /* ------------ TRANSAKSI ------------- */
         DB::transaction(function () use ($article, $val, $request) {
 
-            /* foto baru (jika di-upload) */
             if ($request->hasFile('photo')) {
-                // Hapus foto lama? -> uncomment bila perlu
-                // foreach ($article->photo as $old) Storage::disk('public')->delete($old);
-
                 $paths = [];
                 foreach ($request->file('photo') as $file) {
                     $paths[] = $file->store('articles', 'public');
@@ -263,15 +297,17 @@ class ArticlePageExternalController extends Controller
                 $article->photo = $paths;
             }
 
-            $article->update([
+            // update + RESET status & feedback
+            $article->fill([
                 'kategori_article_id' => $val['kategori_article_id'],
-                'title'          => $val['judul'],
-                'author'         => $val['author'] ?? $article->author,
-                'content'        => $val['konten'],
-                'created_at'     => $val['tanggal'],
-            ]);
+                'title'               => $val['judul'],
+                'author'              => $val['author'] ?? $article->author,
+                'content'             => $val['konten'],
+                'created_at'          => $val['tanggal'],
+                'status_artikel'      => Article::STATUS_NON_AKTIF, // ← reset
+                'feedback'            => null,                      // ← kosongkan
+            ])->save();
 
-            /* tags */
             if (array_key_exists('tags', $val)) {
                 $tagIds = collect($val['tags'])->map(function ($t) {
                     return TagArticle::updateOrCreate(
@@ -285,5 +321,6 @@ class ArticlePageExternalController extends Controller
 
         return response()->json(['success' => true, 'msg' => 'Artikel berhasil di-update!']);
     }
+
 }
 

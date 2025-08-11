@@ -47,6 +47,10 @@
             font-size: .8rem;
             color: #6c757d
         }
+
+        .art-card {
+            position: relative;
+        }
     </style>
 @endsection
 
@@ -151,12 +155,48 @@
         </div>
     </div>
 
+    {{-- — MODAL DETAIL — --}}
+    <div class="modal fade" id="detailArticleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="dt-title" class="modal-title">Detail Artikel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <span id="dt-status" class="badge"></span>
+                    </div>
+
+                    <div class="mb-2 text-muted small">
+                        <span id="dt-author"></span> · <span id="dt-date"></span> ·
+                        <span>Kategori: <strong id="dt-kategori"></strong></span>
+                    </div>
+
+                    <div id="dt-feedback" class="alert alert-warning small d-none"></div>
+
+                    <div class="mb-3" id="dt-photos" class="d-flex gap-2 flex-wrap"></div>
+
+                    <div id="dt-tags" class="mt-2"></div>
+
+                    <div class="mt-3">
+                        <div id="dt-content"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     {{-- — MODAL EDIT — --}}
     <div class="modal fade" id="editArticleModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form id="edit-article-form" enctype="multipart/form-data">@csrf
-                    @method('PUT') {{-- spoof PUT --}}
+                    @method('PUT')
                     <input type="hidden" id="edit-id">
 
                     <div class="modal-header">
@@ -165,16 +205,56 @@
                     </div>
 
                     <div class="modal-body">
-                        {{-- isian mirip modal tambah, ganti prefix jadi edit-* --}}
-                        <input id="edit-judul-input" name="judul" class="form-control mb-3" required>
-                        <input id="edit-author-input" name="author" class="form-control mb-3">
-                        <textarea id="edit-konten" name="konten" class="form-control d-none"></textarea>
-                        {{-- tambah Quill editor #edit-konten-editor via JS --}}
-                        {{-- kategori, tanggal, tags, foto… --}}
+                        {{-- Info status + feedback (readonly) --}}
+                        <div id="edit-status-row" class="mb-3 d-none">
+                            <span id="edit-status-badge" class="badge"></span>
+                        </div>
+                        <div id="edit-feedback-row" class="alert alert-warning small d-none"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Judul</label>
+                            <input id="edit-judul-input" name="judul" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Nama Penulis</label>
+                            <input id="edit-author-input" name="author" class="form-control">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tanggal</label>
+                                <input type="date" id="edit-tanggal-input" name="tanggal" class="form-control"
+                                    required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Kategori</label>
+                                <select id="edit-kategori_article_id" name="kategori_article_id" class="form-select"
+                                    required>
+                                    <option value="">Memuat…</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Konten</label>
+                            <textarea id="edit-konten" name="konten" class="form-control d-none"></textarea>
+                            {{-- Quill editor dibuat via JS --}}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tags</label>
+                            <div id="edit-tags-container"></div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Tambah Foto (opsional)</label>
+                            <input type="file" name="photo[]" class="form-control mb-2" accept="image/*" multiple>
+                        </div>
                     </div>
 
                     <div class="modal-footer">
-                        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button class="btn btn-light" data-bs-dismiss="modal" type="button">Batal</button>
                         <button type="submit" class="btn btn-primary">Update</button>
                     </div>
                 </form>
@@ -402,54 +482,79 @@
                                 '<div class="w-100 text-center py-4">Belum ada artikel.</div>');
                         }
 
-                        /* rakit tiap kartu */
+                        // helper escape untuk hindari XSS
+                        const esc = s => $('<div/>').text(s ?? '').html();
+
                         let html = '';
                         list.forEach((a, i) => {
-                            if (a.status_artikel === 'Tidak Aktif') return; // hide yg non-aktif
+                            // sembunyikan non-aktif
+                            if (a.status_artikel === 'Tidak Aktif') return;
 
-                            const imgs = a.photos.length ? a.photos : [noImg];
+                            const imgs = (a.photos && a.photos.length) ? a.photos : [noImg];
                             const slug = `/artikel/${a.slug}`;
 
+                            const needFix = a.status_artikel === 'Perlu Diperbaiki';
+
+                            // Badge status (muncul hanya jika Perlu Diperbaiki)
+                            const statusBadge = needFix ?
+                                `<span class="badge bg-warning text-dark"
+                       style="position:absolute;top:.5rem;left:.5rem;z-index:2">
+                   <i class="fas fa-wrench me-1"></i> Perlu Diperbaiki
+                 </span>` :
+                                '';
+
+                            // Box feedback admin (muncul hanya jika ada feedback & status perlu diperbaiki)
+                            const feedbackBox = (needFix && a.feedback) ?
+                                `<div class="border rounded p-2 bg-warning bg-opacity-10 text-dark small mt-2">
+                   <div class="fw-semibold mb-1">
+                     <i class="fas fa-comment-dots me-1"></i> Feedback Admin
+                   </div>
+                   <div>${esc(a.feedback)}</div>
+                 </div>` :
+                                '';
+
                             html += `
-<article class="art-card wow fadeIn" data-wow-delay="${(i + 1) * .1}s">
-  <!-- GALERI -->
-  <div id="c${a.id}" class="carousel slide" data-bs-ride="carousel">
-    <div class="carousel-inner">
-      ${imgs.map((x, j) =>
-        `<div class="carousel-item ${!j ? 'active' : ''}">
-               <img src="${x}" class="d-block w-100">
-             </div>`).join('')}
-    </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#c${a.id}" data-bs-slide="prev">
-      <span class="carousel-control-prev-icon"></span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#c${a.id}" data-bs-slide="next">
-      <span class="carousel-control-next-icon"></span>
-    </button>
-  </div>
+            <article class="art-card wow fadeIn" style="position:relative" data-wow-delay="${(i + 1) * .1}s">
+              ${statusBadge}
 
-  <!-- INFO + TOMBOL -->
-  <div class="p-3 d-flex flex-column h-100">
-    <a href="${slug}" class="title text-dark text-decoration-none mb-2">${a.title}</a>
+              <!-- GALERI -->
+              <div id="c${a.id}" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                  ${imgs.map((x, j) =>
+                    `<div class="carousel-item ${!j ? 'active' : ''}">
+                                       <img src="${x}" class="d-block w-100" alt="Foto artikel">
+                                     </div>`).join('')}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#c${a.id}" data-bs-slide="prev">
+                  <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#c${a.id}" data-bs-slide="next">
+                  <span class="carousel-control-next-icon"></span>
+                </button>
+              </div>
 
-    <div class="d-flex justify-content-between align-items-center mt-auto">
-      <span class="meta">${a.author ?? 'Anon'} · ${formatTgl(a.tanggal)}</span>
+              <!-- INFO + TOMBOL -->
+              <div class="p-3 d-flex flex-column h-100">
+                <a href="${slug}" class="title text-dark text-decoration-none mb-2">${esc(a.title)}</a>
 
-      <!-- tombol edit (pakai script update-article.js) -->
-      <button class="btn btn-sm btn-warning edit-btn" data-id="${a.id}">
-        <i class="fas fa-edit"></i>
-      </button>
-    </div>
-  </div>
-</article>`;
+                ${feedbackBox}
+
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                  <span class="meta">${esc(a.author) || 'Anon'} · ${formatTgl(a.tanggal)}</span>
+                  <button class="btn btn-sm btn-warning edit-btn" data-id="${a.id}">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </div>
+              </div>
+            </article>`;
                         });
 
                         $container.html(html);
-                        renderPag(res.pagination); // panggil fungsi pagination yg sudah ada
+                        renderPag(res.pagination);
                     })
-                    .fail(() =>
-                        $container.html('<div class="w-100 text-center text-danger py-4">Gagal memuat.</div>')
-                    );
+                    .fail(() => {
+                        $container.html('<div class="w-100 text-center text-danger py-4">Gagal memuat.</div>');
+                    });
             }
 
 
@@ -480,33 +585,41 @@
 
     <script>
         (() => {
+            const SHOW_URL = id => `/artikel-external/${id}`;
             const EDIT_URL = id => `/artikel-external/${id}/edit`;
             const UPDATE_URL = id => `/artikel-external/${id}`;
+            const CAT_URL = "{{ route('lp.article.external.kategori') }}";
 
-            let qlEdit; // Quill instance untuk edit
+            let qlEdit;
 
-            /* buka modal + load data */
-            $(document).on('click', '.edit-btn', function() {
-                const id = $(this).data('id');
-                $.get(EDIT_URL(id))
+            // ===== Utils =====
+            function esc(s) {
+                return $('<div/>').text(s ?? '').html();
+            }
+
+            function badgeClass(status) {
+                if (status === 'Perlu Diperbaiki') return 'bg-warning text-dark';
+                if (status === 'Aktif') return 'bg-success';
+                if (status === 'Tidak Aktif') return 'bg-secondary';
+                return 'bg-light text-dark';
+            }
+
+            function loadEditKategori(selectedId) {
+                $('#edit-kategori_article_id').html('<option value="">Memuat…</option>');
+                $.get(CAT_URL)
                     .done(r => {
-                        $('#edit-id').val(r.id);
-                        $('#edit-judul-input').val(r.title);
-                        $('#edit-author-input').val(r.author);
-                        $('#edit-tanggal-input').val(r.tanggal);
-                        $('#edit-kategori_article_id').val(r.kategori);
-
-                        if (!qlEdit) initQuillEdit();
-                        qlEdit.root.innerHTML = r.content;
-
-                        loadEditTags(r.tags); // helper di bawah
-                        $('#editArticleModal').modal('show');
+                        let opt = '<option value="">Pilih Kategori</option>';
+                        (r.data || []).forEach(k => {
+                            const sel = Number(selectedId) === Number(k.id) ? 'selected' : '';
+                            opt += `<option value="${k.id}" ${sel}>${esc(k.name_kategori)}</option>`;
+                        });
+                        $('#edit-kategori_article_id').html(opt);
                     })
-                    .fail(() => Swal.fire('Error', 'Data tidak ditemukan', 'error'));
-            });
+                    .fail(() => $('#edit-kategori_article_id').html('<option value="">Gagal memuat</option>'));
+            }
 
-            /* init Quill sekali saja */
             function initQuillEdit() {
+                if (qlEdit) return;
                 $('#edit-konten').after('<div id="edit-konten-editor" style="height:200px"></div>').hide();
                 qlEdit = new Quill('#edit-konten-editor', {
                     theme: 'snow',
@@ -523,28 +636,63 @@
                 });
             }
 
-            /* render tag input */
-            function loadEditTags(tags = []) {
+            function renderEditTags(tags = []) {
                 let html = '';
                 tags.forEach((t, i) => html += `
-     <div class="row g-2 mb-2">
-        <div class="col-md-6"><input class="form-control" name="tags[${i}][nama]" value="${t.nama}"></div>
-        <div class="col-md-5"><input class="form-control" name="tags[${i}][link]" value="${t.link}"></div>
+      <div class="row g-2 mb-2">
+        <div class="col-md-6"><input class="form-control" name="tags[${i}][nama]" value="${esc(t.nama)}" placeholder="Nama Tag"></div>
+        <div class="col-md-5"><input class="form-control" name="tags[${i}][link]" value="${esc(t.link)}" placeholder="Link"></div>
         <div class="col-md-1"></div>
-     </div>`);
+      </div>`);
                 $('#edit-tags-container').html(html);
             }
 
-            /* submit */
+            // ===== OPEN EDIT MODAL =====
+            $(document).on('click', '.edit-btn', function() {
+                const id = $(this).data('id');
+                $.get(EDIT_URL(id))
+                    .done(r => {
+                        $('#edit-id').val(r.id);
+                        $('#edit-judul-input').val(r.title);
+                        $('#edit-author-input').val(r.author);
+                        $('#edit-tanggal-input').val(r.tanggal);
+
+                        initQuillEdit();
+                        qlEdit.root.innerHTML = r.content;
+
+                        // status + feedback (readonly)
+                        if (r.status_artikel) {
+                            $('#edit-status-row').removeClass('d-none');
+                            $('#edit-status-badge')
+                                .attr('class', 'badge ' + badgeClass(r.status_artikel))
+                                .text(r.status_artikel);
+                        } else {
+                            $('#edit-status-row').addClass('d-none');
+                        }
+                        if (r.feedback) {
+                            $('#edit-feedback-row').removeClass('d-none').html(
+                                `<i class="fas fa-comment-dots me-1"></i>${esc(r.feedback)}`);
+                        } else {
+                            $('#edit-feedback-row').addClass('d-none').html('');
+                        }
+
+                        loadEditKategori(r.kategori);
+                        renderEditTags(r.tags || []);
+
+                        $('#editArticleModal').modal('show');
+                    })
+                    .fail(() => Swal.fire('Error', 'Data tidak ditemukan', 'error'));
+            });
+
+            // ===== SUBMIT EDIT =====
             $('#edit-article-form').on('submit', function(e) {
                 e.preventDefault();
-
                 const id = $('#edit-id').val();
                 $('#edit-konten').val(qlEdit.root.innerHTML.trim());
 
                 $.ajax({
                     url: UPDATE_URL(id),
-                    method: 'POST', // pakai spoof PUT
+                    method: 'POST',
                     headers: {
                         'X-HTTP-Method-Override': 'PUT'
                     },
@@ -554,8 +702,7 @@
                     success: () => {
                         Swal.fire('Berhasil', 'Artikel diperbarui', 'success');
                         $('#editArticleModal').modal('hide');
-                        window.loadArtikel &&
-                            loadArtikel(); // refresh list (fungsi global dari file list)
+                        window.loadArtikel && loadArtikel(); // refresh list
                     },
                     error: x => {
                         const msg = (x.status === 422) ?
@@ -564,6 +711,53 @@
                         Swal.fire('Error', msg, 'error');
                     }
                 });
+            });
+
+            // ===== OPEN DETAIL MODAL =====
+            // Tambahkan tombol "Detail" di kartu (atau pakai title link) dengan class .detail-btn data-id
+            $(document).on('click', '.detail-btn, .open-detail', function(e) {
+                e.preventDefault();
+                const id = $(this).data('id');
+                $.get(SHOW_URL(id))
+                    .done(r => {
+                        $('#dt-title').text(r.title || 'Detail Artikel');
+                        $('#dt-author').text(r.author || 'Anon');
+                        $('#dt-date').text(r.tanggal || '-');
+                        $('#dt-kategori').text(r.kategori || '-');
+
+                        $('#dt-status')
+                            .attr('class', 'badge ' + badgeClass(r.status_artikel))
+                            .text(r.status_artikel || '-');
+
+                        if (r.feedback) {
+                            $('#dt-feedback').removeClass('d-none').html(
+                                `<i class="fas fa-comment-dots me-1"></i>${esc(r.feedback)}`);
+                        } else {
+                            $('#dt-feedback').addClass('d-none').html('');
+                        }
+
+                        // Photos
+                        const photos = r.photos || [];
+                        let phtml = '';
+                        photos.forEach(p => phtml +=
+                            `<img src="${p.url}" alt="foto" class="img-thumbnail me-2 mb-2" style="max-height:120px">`
+                            );
+                        $('#dt-photos').html(phtml);
+
+                        // Tags
+                        const tags = r.tags || [];
+                        $('#dt-tags').html(tags.length ?
+                            tags.map(t =>
+                                `<a href="${esc(t.link)}" target="_blank" class="badge bg-light text-dark me-1">${esc(t.nama_tags ?? t.nama)}</a>`
+                                ).join('') :
+                            '');
+
+                        // Content preview
+                        $('#dt-content').html(r.content || '');
+
+                        $('#detailArticleModal').modal('show');
+                    })
+                    .fail(() => Swal.fire('Error', 'Gagal memuat detail', 'error'));
             });
         })();
     </script>
