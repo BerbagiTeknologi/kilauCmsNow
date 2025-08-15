@@ -124,63 +124,95 @@
 
 
 <script>
-    // Fungsi untuk mengambil warna acak berdasarkan input (misalnya nama)
-    function getRandomColor(input) {
-        const colors = ['#0d6efd', '#6f42c1', '#d63384', '#fd7e14', '#20c997', '#198754', '#dc3545', '#0dcaf0'];
-        if (!input || input.length === 0) return colors[0];
-        const index = input.charCodeAt(0) % colors.length;
-        return colors[index];
-    }
+  // Warna acak dari inisial (tetap)
+  function getRandomColor(input) {
+      const colors = ['#0d6efd','#6f42c1','#d63384','#fd7e14','#20c997','#198754','#dc3545','#0dcaf0'];
+      if (!input || input.length === 0) return colors[0];
+      const index = input.charCodeAt(0) % colors.length;
+      return colors[index];
+  }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        // Cek apakah user sudah login (ada token)
-        var userToken = localStorage.getItem('user_token');
-        if (userToken) {
-            // Sembunyikan link "Login Website"
-            var loginItem = document.getElementById('loginWebsiteItem');
-            if (loginItem) loginItem.classList.add('d-none');
-            
-            // Tampilkan profile dropdown
-            var profileDropdown = document.getElementById('profileDropdown');
-            if (profileDropdown) {
-                profileDropdown.classList.remove('d-none');
-                // Ambil nama user dari localStorage
-                var userName = localStorage.getItem('user_name') || "U";
-                // Ambil huruf awal nama
-                var initial = userName.trim().charAt(0).toUpperCase();
-                // Tampilkan inisial di dalam elemen avatar dan hapus kelas bg-secondary
-                var avatarEl = profileDropdown.querySelector('.profile-avatar');
-                if (avatarEl) {
-                    avatarEl.textContent = initial;
-                    avatarEl.classList.remove('bg-secondary');
-                    // Set backgroundColor dengan !important agar bisa menimpa Bootstrap (gunakan setProperty)
-                    avatarEl.style.setProperty('background-color', getRandomColor(userName), 'important');
-                }
+  // Normalisasi URL lama -> jalur publik /kilau/*
+  function fixKilauUrl(url) {
+      if (!url) return '';
+      if (/^https?:\/\//i.test(url)) return url; // sudah absolut
+      // legacy: /upload/* -> /kilau/upload/*
+      if (url.includes('/kilau/upload/') || url.includes('/kilau/usersumum/')) return url;
+      return url.replace('/upload/', '/kilau/upload/');
+  }
 
-                // 👉 Tampilkan tombol Poin Anda
-                var usersAndaNav = document.getElementById('usersAndaNav');
-                if (usersAndaNav)  usersAndaNav.classList.remove('d-none');
+  document.addEventListener("DOMContentLoaded", function() {
+      var userToken = localStorage.getItem('user_token');
+      if (userToken) {
+          // Sembunyikan link "Login Website"
+          var loginItem = document.getElementById('loginWebsiteItem');
+          if (loginItem) loginItem.classList.add('d-none');
 
-                var poinNav = document.getElementById('poinAndaNav');
-                if (poinNav) poinNav.classList.remove('d-none');
+          // Tampilkan profile dropdown
+          var profileDropdown = document.getElementById('profileDropdown');
+          if (profileDropdown) {
+              profileDropdown.classList.remove('d-none');
 
-                var articleAndaNav = document.getElementById('articleAndaNav');
-                if (articleAndaNav) articleAndaNav.classList.remove('d-none');
-            }
-        }
-        
-        // Fungsi logout: hapus token dan reload halaman
-        var btnLogout = document.getElementById('btnLogout');
-        if (btnLogout) {
-            btnLogout.addEventListener('click', function(e) {
-                e.preventDefault();
-                localStorage.removeItem('user_token');
-                localStorage.removeItem('user_level');
-                localStorage.removeItem('user_name');
-                window.location.href = "{{ route('home') }}";
-            });
-        }
-    });
+              var userName = localStorage.getItem('user_name') || "U";
+              var initial  = userName.trim().charAt(0).toUpperCase();
+
+              // ambil foto dari localStorage (prioritas usersumum)
+              var photo = localStorage.getItem('user_photo') 
+                          || localStorage.getItem('user_photo_users_umum') 
+                          || '';
+
+              var avatarEl = profileDropdown.querySelector('.profile-avatar');
+              if (avatarEl) {
+                  if (photo) {
+                      photo = fixKilauUrl(photo);
+                      // ganti isi span jadi <img>
+                      avatarEl.innerHTML = '<img class="avatar-img" alt="'+initial+'">';
+                      avatarEl.classList.remove('bg-secondary','text-white');
+                      avatarEl.style.removeProperty('background-color');
+                      var img = avatarEl.querySelector('img');
+                      img.src = photo;
+
+                      // kalau gagal load gambar, fallback ke inisial
+                      img.addEventListener('error', function() {
+                          avatarEl.textContent = initial;
+                          avatarEl.classList.add('text-white');
+                          avatarEl.style.setProperty('background-color', getRandomColor(userName), 'important');
+                      });
+                  } else {
+                      // default: inisial + warna
+                      avatarEl.textContent = initial;
+                      avatarEl.classList.add('text-white');
+                      avatarEl.style.setProperty('background-color', getRandomColor(userName), 'important');
+                  }
+              }
+
+              // tampilkan item menu lain
+              var usersAndaNav = document.getElementById('usersAndaNav');
+              if (usersAndaNav) usersAndaNav.classList.remove('d-none');
+              var poinNav = document.getElementById('poinAndaNav');
+              if (poinNav) poinNav.classList.remove('d-none');
+              var articleAndaNav = document.getElementById('articleAndaNav');
+              if (articleAndaNav) articleAndaNav.classList.remove('d-none');
+          }
+      }
+
+      // Logout: hapus semua cache user termasuk foto
+      var btnLogout = document.getElementById('btnLogout');
+      if (btnLogout) {
+          btnLogout.addEventListener('click', function(e) {
+              e.preventDefault();
+              localStorage.removeItem('user_token');
+              localStorage.removeItem('user_level');
+              localStorage.removeItem('user_name');
+              localStorage.removeItem('user_email');
+              localStorage.removeItem('user_id');
+              localStorage.removeItem('user_referral_code');
+              localStorage.removeItem('user_photo');
+              localStorage.removeItem('user_photo_users_umum');
+              window.location.href = "{{ route('home') }}";
+          });
+      }
+  });
 </script>
 
 

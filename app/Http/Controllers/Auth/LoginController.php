@@ -71,7 +71,7 @@ class LoginController extends Controller
         }
     } */
 
-    public function loginProses(Request $request)
+    /* public function loginProses(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
@@ -128,7 +128,76 @@ class LoginController extends Controller
         return response()->json([
             'error' => $response->json()['message'] ?? 'Login failed.',
         ], $response->status());
+    } */
+
+        public function loginProses(Request $request)
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $response = $this->makeApiRequest([
+            'email'    => $request->email,
+            'password' => $request->password,
+        ]);
+
+        if ($response->status() == 200) {
+            $data = $response->json();
+
+            if (isset($data['token'])) {
+                $ok       = $data['berhasil'] ?? [];
+                $fotoUmum = $ok['foto_users_umum'] ?? null;  // ← URL penuh dari API showUser
+                $fotoOld  = $ok['foto'] ?? null;             // ← URL lama (upload)
+                $chosen   = $fotoUmum ?: $fotoOld;           // ← prioritas usersumum
+
+                // Simpan data ke session
+                session([
+                    'user_id'            => $ok['id'] ?? null,
+                    'user_name'          => $ok['nama'] ?? null,
+                    'user_email'         => $ok['email'] ?? null,
+                    'user_role'          => $ok['cms'] ?? null,
+                    'user_token'         => $data['token'],
+                    'user_level'         => $ok['level'] ?? null,
+                    'user_referral_code' => $ok['referral_code'] ?? null,
+                    'user_photo'         => $chosen,          // ← yang dipakai navbar/avatar
+                    'user_photo_umum'    => $fotoUmum,        // ← simpan juga kalau perlu
+                    'user_photo_legacy'  => $fotoOld,
+                ]);
+
+                // Hanya CMS admin boleh ke dashboard
+                $redirectUrl = ($ok['cms'] ?? null) === 'admin'
+                    ? route('dashboard')
+                    : route('home');
+
+                return response()->json([
+                    'message'      => 'Login berhasil!',
+                    'redirect_url' => $redirectUrl,
+                    'token'        => session('user_token'),
+                    'user'         => [
+                        'id'             => session('user_id'),
+                        'name'           => session('user_name'),
+                        'email'          => session('user_email'),
+                        'level'          => session('user_level'),
+                        'referral_code'  => session('user_referral_code'),
+                        // kirim dua-duanya + satu pilihan final
+                        'photo'              => $chosen,
+                        'photo_users_umum'   => $fotoUmum,
+                        'photo_legacy'       => $fotoOld,
+                    ],
+                ]);
+            }
+
+            return response()->json([
+                'error' => 'Your account does not contain a token.',
+            ], 400);
+        }
+
+        return response()->json([
+            'error' => $response->json()['message'] ?? 'Login failed.',
+        ], $response->status());
     }
+
 
     private function makeApiRequest(array $data)
     {

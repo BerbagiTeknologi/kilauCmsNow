@@ -186,6 +186,53 @@
                 font-size: 0.8rem;
             }
         }
+
+        /* Sembunyikan ikon reveal bawaan (Edge) */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+
+        .pwd-wrapper {
+            position: relative;
+        }
+
+        .pwd-wrapper .toggle-eye {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            opacity: .8;
+            padding: 0;
+            color: #6c757d;
+            /* warna garis ikon */
+        }
+
+        .pwd-wrapper .toggle-eye:hover {
+            opacity: 1;
+        }
+
+        .pwd-wrapper .toggle-eye:focus {
+            outline: 0;
+            box-shadow: none;
+        }
+
+        .pwd-wrapper input.form-control {
+            padding-right: 2.5rem;
+        }
+
+        .pwd-wrapper .toggle-eye svg {
+            pointer-events: none;
+            display: block;
+        }
     </style>
 @endsection
 
@@ -250,51 +297,51 @@
 @section('scripts')
     <script>
         $('#login-form').submit(function(event) {
-            event.preventDefault(); // Mencegah form submit secara default
+            event.preventDefault();
 
             var email = $('#email').val();
             var password = $('#password').val();
             var csrfToken = $('input[name="_token"]').val();
 
             $.ajax({
-                url: "{{ route('loginProses') }}", // URL untuk controller login
+                url: "{{ route('loginProses') }}",
                 method: "POST",
                 data: {
                     _token: csrfToken,
-                    email: email,
-                    password: password
+                    email,
+                    password
                 },
                 success: function(res) {
                     if (res.redirect_url) {
-                        // Simpan data ke localStorage agar navbar update
-                        if (res.token) {
-                            localStorage.setItem('user_token', res.token);
+                        if (res.token) localStorage.setItem('user_token', res.token);
+
+                        if (res.user) {
+                            if (res.user.id) localStorage.setItem('user_id', res.user.id);
+                            if (res.user.email) localStorage.setItem('user_email', res.user.email);
+                            if (res.user.name) localStorage.setItem('user_name', res.user.name);
+                            if (res.user.level) localStorage.setItem('user_level', res.user.level);
+                            if (res.user.referral_code)
+                                localStorage.setItem('user_referral_code', res.user.referral_code);
+
+                            // simpan foto – prioritas photo (sudah dipilih server)
+                            if (res.user.photo)
+                                localStorage.setItem('user_photo', fixKilauUrl(res.user.photo));
+                            // simpan juga usersumum spesifik (opsional)
+                            if (res.user.photo_users_umum)
+                                localStorage.setItem('user_photo_users_umum', fixKilauUrl(res.user
+                                    .photo_users_umum));
                         }
-                        if (res.user && res.user.id) localStorage.setItem('user_id', res.user.id);
-                        if (res.user && res.user.email) localStorage.setItem('user_email', res.user
-                            .email);
-                        if (res.user && res.user.name) {
-                            localStorage.setItem('user_name', res.user.name);
-                        }
-                        if (res.user && res.user.level) {
-                            localStorage.setItem('user_level', res.user.level);
-                        }
-                        if (res.user && res.user.referral_code) {
-                            localStorage.setItem('user_referral_code', res.user
-                            .referral_code); // ← ini yang baru
-                        }
-                        if (res.user && res.user.photo) {
-                            localStorage.setItem('user_photo', fixKilauUrl(res.user.photo));
-                        }
+
                         Swal.fire({
-                            icon: 'success',
-                            title: 'Login Berhasil!',
-                            text: 'Mengalihkan ke dashboard...',
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            window.location.href = res.redirect_url;
-                        });
+                                icon: 'success',
+                                title: 'Login Berhasil!',
+                                text: 'Mengalihkan ke dashboard...',
+                                timer: 2000,
+                                showConfirmButton: false
+                            })
+                            .then(() => {
+                                window.location.href = res.redirect_url;
+                            });
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -313,14 +360,66 @@
                 }
             });
         });
+
+        function fixKilauUrl(url) {
+            if (!url) return '';
+            // kalau sudah absolut, biarkan
+            if (/^https?:\/\//i.test(url)) return url;
+            // legacy: ubah /upload/ -> /kilau/upload/
+            if (url.includes('/kilau/usersumum/') || url.includes('/kilau/upload/')) return url;
+            return url.replace('/upload/', '/kilau/upload/');
+        }
     </script>
 
     <script>
-        function fixKilauUrl(url) {
-            if (!url) return '';
-            return url.includes('/kilau/upload/') ?
-                url :
-                url.replace('/upload/', '/kilau/upload/');
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const pwd = document.getElementById('password');
+            if (!pwd) return;
+
+            // Bungkus input agar ikon bisa absolute
+            const wrap = document.createElement('div');
+            wrap.className = 'pwd-wrapper';
+            const p = pwd.parentNode;
+            p.insertBefore(wrap, pwd);
+            wrap.appendChild(pwd);
+
+            // Ikon SVG berbasis stroke (tanpa fill putih)
+            const svgEye =
+                '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"' +
+                ' fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                ' <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7"/>' +
+                ' <circle cx="12" cy="12" r="3"/>' +
+                '</svg>';
+
+            const svgEyeOff =
+                '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"' +
+                ' fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                ' <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.78 21.78 0 0 1 5.06-5.88"/>' +
+                ' <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>' +
+                ' <path d="M14.12 5.1A10.94 10.94 0 0 1 12 5c-7 0-11 7-11 7a21.78 21.78 0 0 0 5.06 5.88"/>' +
+                ' <line x1="1" y1="1" x2="23" y2="23"/>' +
+                '</svg>';
+
+            // Tombol toggle
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'toggle-eye';
+            btn.setAttribute('aria-label', 'Tampilkan/sembunyikan password');
+            btn.innerHTML = svgEye;
+            wrap.appendChild(btn);
+
+            btn.addEventListener('click', () => {
+                const show = pwd.type === 'text';
+                pwd.type = show ? 'password' : 'text';
+                btn.innerHTML = show ? svgEye : svgEyeOff;
+
+                // jaga caret di akhir
+                try {
+                    const v = pwd.value;
+                    pwd.focus();
+                    pwd.setSelectionRange(v.length, v.length);
+                } catch (e) {}
+            });
+        });
     </script>
 @endsection

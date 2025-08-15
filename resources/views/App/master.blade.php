@@ -52,121 +52,57 @@
     <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet" />
 
     <style>
-        /* Wrapper untuk tombol Chatbot */
         .floating-buttons {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: row;
-            gap: 15px !important;
-            z-index: 999;
-        }
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: row;
+        gap: 15px !important;
+        z-index: 999;
+    }
 
-        /* Tombol Customer Service Bot */
-        .chatbot-button {
-            background-color: #007bff;
-            color: white;
-            font-size: 24px;
-            padding: 15px;
-            border-radius: 50%;
-            text-align: center;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
-        }
+    /* Gaya dasar tombol floating (supaya sama ukurannya) */
+    .floating-buttons a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 54px;
+        height: 54px;
+        font-size: 24px;
+        border-radius: 50%;
+        text-align: center;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+        color: white;
+    }
 
-        /* Hover effect pada tombol Customer Service Bot */
-        .chatbot-button:hover {
-            background-color: #0056b3;
-            transform: scale(1.1);
-        }
+    /* Tombol Chat Bot */
+    .chatbot-button {
+        background-color: #007bff;
+    }
+    .chatbot-button:hover {
+        background-color: #0056b3;
+        transform: scale(1.1);
+    }
 
-        /* Chatbot Styling */
-        .chat-container {
-            position: fixed;
-            bottom: 70px;
-            right: 20px;
-            width: 300px;
-            height: 400px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            display: flex;
-            flex-direction: column;
-            z-index: 9999;
-            display: none; /* Hide initially */
-        }
+    /* Tombol Donasi */
+    .donation-button {
+        background-color: #dc3545;
+    }
+    .donation-button:hover {
+        background-color: #bb2d3b;
+        transform: scale(1.1);
+    }
 
-        .chat-header {
-            background-color: #007bff;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            font-size: 18px;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-        }
+     .profile-avatar > img.avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 9999px;
+        display: block;
+    }
 
-        .chat-box {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 10px;
-            background-color: #f1f1f1;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .chat-input-container {
-            display: flex;
-            padding: 10px;
-            background-color: #fff;
-            border-bottom-left-radius: 10px;
-            border-bottom-right-radius: 10px;
-        }
-
-        .chat-input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-
-        .chat-button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-left: 10px;
-            cursor: pointer;
-            border: none;
-        }
-
-        .message {
-            margin: 10px 0;
-            padding: 8px;
-            border-radius: 5px;
-            max-width: 80%;
-        }
-
-        .user-message {
-            background-color: #d1f7ff;
-            margin-left: auto;
-        }
-
-        .bot-message {
-            background-color: #e5e5e5;
-            margin-right: auto;
-        }
-
-        /* Close button */
-        .close-chatbot {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-        }
         
     </style>
 
@@ -183,6 +119,11 @@
 
     <!-- Wrapper untuk tombol Chat Bot -->
     <div class="floating-buttons">
+           <a href="#" class="donation-button" id="floating-donate-btn" title="Donasi"
+                @if(isset($selectedProgram)) data-program-id="{{ $selectedProgram->id }}" @endif>
+            <i class="bi bi-heart-fill"></i>
+            </a>
+
         <!-- Tombol Chat Bot -->
         <a href="#" class="chatbot-button" id="chatbot-button">
             <i class="bi bi-chat-dots" id="chatbot-icon"></i>
@@ -237,6 +178,77 @@
 
     @yield('scripts')
     @stack('scripts')
+
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+  const donateBtn  = document.getElementById('floating-donate-btn');
+  if (!donateBtn) return;
+
+  const programId  = donateBtn.getAttribute('data-program-id') || null;
+  const modalEl    = document.getElementById('donasiModal');                // modal yang kamu pakai di index
+  const modalAlt   = document.getElementById('ourProgramDonasiModal');      // kalau ada versi lain
+  const modalNode  = modalEl || modalAlt;
+
+  const HOME_BASE  = "{{ url('/') }}";
+  const DONASI_URL = programId ? `${HOME_BASE}?donasi=${encodeURIComponent(programId)}#donasi`
+                               : `${HOME_BASE}#donasi`;
+
+  function openModalAndSelect() {
+    if (!modalNode || typeof bootstrap === 'undefined') return false;
+
+    // Saat modal sudah tampil, baru set mode & klik kartu
+    const onShown = () => {
+      modalNode.removeEventListener('shown.bs.modal', onShown);
+
+      // 1) aktifkan mode "Donasi Program"
+      const btnProgram = document.getElementById('donasiProgramBtn');
+      if (btnProgram) btnProgram.click();
+      else {
+        const pc = document.getElementById('program-cards');
+        const ou = document.getElementById('opsionalUmum');
+        if (pc) pc.style.display = 'block';
+        if (ou) ou.style.display = 'none';
+      }
+
+      // 2) klik kartu sesuai programId (agar handler index on('click') jalan)
+      if (programId) {
+        const tryClick = () => {
+          // jQuery kalau ada:
+          if (window.jQuery) {
+            const $card = jQuery(`#program-cards .program-card[data-program-id="${programId}"]`);
+            if ($card.length) { $card.addClass('selected-btn').trigger('click'); return true; }
+          }
+          // DOM murni:
+          const card = document.querySelector(`#program-cards .program-card[data-program-id="${programId}"]`);
+          if (card) { card.classList.add('selected-btn'); card.click(); return true; }
+          return false;
+        };
+
+        if (!tryClick()) {
+          // retry max 10x tiap 120ms kalau gambar/kartu render agak telat
+          let tries = 0;
+          const iv = setInterval(() => {
+            if (tryClick() || ++tries >= 10) clearInterval(iv);
+          }, 120);
+        }
+      }
+    };
+
+    modalNode.addEventListener('shown.bs.modal', onShown, { once: true });
+    bootstrap.Modal.getOrCreateInstance(modalNode).show();
+    return true;
+  }
+
+  donateBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    // 1) kalau modal ada di halaman ini → langsung buka & pilih
+    if (openModalAndSelect()) return;
+
+    // 2) kalau tidak ada modal → redirect ke index (nanti index init dari query)
+    window.location.href = DONASI_URL;
+  });
+});
+</script>
 
     <script>
       var phoneNumber = '(0234) 7121601'; // Nomor WhatsApp untuk customer service

@@ -1226,6 +1226,36 @@
                     }
                 });
             });
+
+            (function initFromQuery(){
+            const params   = new URLSearchParams(window.location.search);
+            const id       = params.get('donasi');
+            if (!id) return;
+
+            const modalEl = document.getElementById('donasiModal');
+            if (modalEl && typeof bootstrap !== 'undefined') {
+            modalEl.addEventListener('shown.bs.modal', function onShown() {
+                modalEl.removeEventListener('shown.bs.modal', onShown);
+
+                // aktifkan mode Program
+                if ($('#donasiProgramBtn').length) $('#donasiProgramBtn').trigger('click');
+                else { $('#program-cards').show(); $('#opsionalUmum').hide(); }
+
+                // klik kartu agar handler-mu jalan (set #programIdInput + fetchProgramInfo)
+                const select = () => {
+                const $card = $(`#program-cards .program-card[data-program-id="${id}"]`);
+                if ($card.length) { $card.addClass('selected-btn').trigger('click'); return true; }
+                return false;
+                };
+                if (!select()) {
+                let tries = 0;
+                const iv = setInterval(() => { if (select() || ++tries >= 10) clearInterval(iv); }, 120);
+                }
+            }, { once:true });
+
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            }
+        })();
         });
 
         $(document).ready(function() {
