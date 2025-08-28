@@ -17,6 +17,7 @@ use App\Models\MitraDonatur;
 use App\Models\SettingsMenu;
 use App\Models\TimlineKilau;
 use Illuminate\Http\Request;
+use App\Models\DonasiHistory;
 use App\Models\IklanKilauList;
 use App\Models\ProgramReferral;
 use Illuminate\Support\Facades\DB;
@@ -329,6 +330,16 @@ class HomeController extends Controller
         // Simpan data donasi
         $donasi->save();
 
+        // === CATAT HISTORI: status awal (pending)
+        DonasiHistory::create([
+            'donasikilau_id'   => $donasi->id,
+            'external_user_id' => session('user_id'),
+            'status_donasi'    => $donasi->status_donasi,
+            'total_donasi'     => $donasi->total_donasi,
+            'feedback'         => $request->input('feedback'),
+            'token'            => session('user_token'),
+        ]);
+
         return response()->json([
             'message' => 'Donasi berhasil disimpan, silakan lanjutkan pembayaran.',
             'donasi_id' => $donasi->id
@@ -352,6 +363,7 @@ class HomeController extends Controller
 
         $donasi->status_donasi = $request->status;  // Menetapkan status berdasarkan input
         $donasi->save();
+        
 
         return response()->json([
             'message' => 'Status donasi berhasil diperbarui.'

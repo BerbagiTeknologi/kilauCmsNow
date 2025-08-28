@@ -61,6 +61,11 @@ class DonasiKilau extends Model
         return $this->belongsTo(Program::class, 'id_program', 'id');
     }
 
+    public function histories()
+    {
+        return $this->hasMany(DonasiHistory::class, 'donasikilau_id');
+    }
+
     // Menentukan kolom-kolom yang harus di-cast jika diperlukan
     protected $casts = [
         'total_donasi' => 'decimal:2', // Menyimpan nilai total_donasi dengan 2 desimal

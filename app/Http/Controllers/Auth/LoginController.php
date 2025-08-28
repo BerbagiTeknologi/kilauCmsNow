@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\DonasiKilau;
 use Illuminate\Http\Request;
+use App\Models\DonasiHistory;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 
@@ -12,8 +14,50 @@ class LoginController extends Controller
         return view('Auth.login');
     }
 
-    public function getDataUsersProfile(){
-        return view('Auth.profile');
+    public function getDataUsersProfile(Request $request)
+    {
+        // Ambil user_id dari session (diset saat loginProses)
+        $externalUserId = session('user_id');
+
+        // Kalau belum login, arahkan ke halaman login (opsional)
+        if (!$externalUserId) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        // Ambil histori donasi user + relasi donasi & program
+        $histories = DonasiHistory::with([
+                'donasikilau' => function ($q) {
+                    $q->select('id','type_donasi','opsional_umum','id_program','nama','total_donasi','status_donasi','created_at')
+                      ->with(['program:id,judul']);
+                }
+            ])
+            ->where('external_user_id', $externalUserId)
+            ->orderByDesc('created_at')
+            ->paginate(10); // ganti ->get() jika tak mau paginate
+
+        // Data profil dasar dari session (untuk render cepat di blade)
+        $user = [
+            'id'            => session('user_id'),
+            'nama'          => session('user_name'),
+            'email'         => session('user_email'),
+            'level'         => session('user_level'),
+            'referral_code' => session('user_referral_code'),
+            'foto'          => session('user_photo'),
+        ];
+
+        // Peta label status donasi
+        $statusMap = [
+            DonasiKilau::DONASI_PENDING => 'Pending',
+            DonasiKilau::DONASI_AKTIVE  => 'Aktif',
+        ];
+
+        // Peta label opsional umum (berdasarkan konstanta di model)
+        $opsionalUmumMap = [
+            DonasiKilau::OPSIONAL_UMUM_ZAKAT => 'Zakat',
+            DonasiKilau::OPSIONAL_UMUM_INFAQ => 'Infaq',
+        ];
+
+        return view('Auth.profile', compact('user','histories','statusMap','opsionalUmumMap'));
     }
 
     /* public function loginProses(Request $request)
@@ -130,7 +174,7 @@ class LoginController extends Controller
         ], $response->status());
     } */
 
-        public function loginProses(Request $request)
+    public function loginProses(Request $request)
     {
         $request->validate([
             'email'    => 'required|email',
@@ -197,7 +241,6 @@ class LoginController extends Controller
             'error' => $response->json()['message'] ?? 'Login failed.',
         ], $response->status());
     }
-
 
     private function makeApiRequest(array $data)
     {

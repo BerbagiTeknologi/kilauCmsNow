@@ -9,10 +9,11 @@ use App\Models\DonasiKilau;
 use App\Models\ViewTraffic;
 use App\Models\MitraDonatur;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Http;
+use App\Models\ProgramReferral;
 use Illuminate\Support\Facades\DB; 
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Response;
 
 class DashboardController extends Controller
 {
@@ -91,11 +92,14 @@ class DashboardController extends Controller
         $totalFormDonasi        = ViewTraffic::where('type', ViewTraffic::TYPE_FORM_DONASI)->count();
         $totalFormDonasiProgram = ViewTraffic::where('type', ViewTraffic::TYPE_FORM_DONASI_PROGRAM)->count();
 
-
+        $referralList = ProgramReferral::with(['program:id,judul'])
+            ->orderByDesc('created_at')
+            ->paginate(10)               // ubah per halaman sesuai kebutuhan
+            ->withQueryString();
 
         return view('AdminPage.dashboard', compact('totalTestimoni', 'totalBerita', 'totalMitraDonatur',
         'totalKantorCabang',   'donasi',   'bulan', 'totalDonasi',  'bulanKunjungan', 'totalKunjungan',    'landingLogs',  'totalLandingPage',
-    'totalFormDonasi', 'totalFormDonasiProgram'));
+    'totalFormDonasi', 'totalFormDonasiProgram', 'referralList'));
     }
     
     public function donasiData(Request $request)
