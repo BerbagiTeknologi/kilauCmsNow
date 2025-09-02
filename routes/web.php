@@ -173,6 +173,9 @@ Route::post('/track-donasi-modal', [HomeController::class, 'trackDonasiModal'])
 Route::post('/track-donasi-modal-program', [HomeController::class, 'trackDonasiModalProgram'])
      ->name('track.donasi.modalprogram');
 
+Route::get('/donasi/cek-donatur', [HomeController::class, 'cekDonatur'])
+    ->name('donasi.cek-donatur');
+
 /* Admin Page */
 Route::middleware(['userAccess:admin'])->prefix('admin')->group(function () {
     

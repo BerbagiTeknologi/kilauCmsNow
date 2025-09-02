@@ -165,71 +165,80 @@
             background-color: transparent !important;
         }
 
-      /* ========= IKLAN MODAL – aturan umum (SEMUA ukuran) ========= */
-        #iklanModal .modal-dialog{
+        /* ========= IKLAN MODAL – aturan umum (SEMUA ukuran) ========= */
+        #iklanModal .modal-dialog {
             /* ukuran desktop/tablet – Anda boleh ubah angka */
-            max-width:750px;
+            max-width: 750px;
         }
-        
-        #iklanModal .modal-body{
-            padding:0;           /* tetap tanpa padding di semua ukuran */
-            overflow:hidden;     /* cegah scroll horizontal */
+
+        #iklanModal .modal-body {
+            padding: 0;
+            /* tetap tanpa padding di semua ukuran */
+            overflow: hidden;
+            /* cegah scroll horizontal */
         }
-        
-        #iklanModal .modal-body img{
-            width:100%;
-            object-fit:contain;
+
+        #iklanModal .modal-body img {
+            width: 100%;
+            object-fit: contain;
         }
-        
+
         /* footer & tombol (berlaku di semua ukuran) */
-        #iklanModal .modal-footer{
-            padding:.5rem 1rem .75rem;
+        #iklanModal .modal-footer {
+            padding: .5rem 1rem .75rem;
         }
-        #iklanModal .modal-footer .btn{
-            font-size:15px;
-            padding:10px 12px;
+
+        #iklanModal .modal-footer .btn {
+            font-size: 15px;
+            padding: 10px 12px;
         }
-        
+
         /* ========= penyesuaian khusus MOBILE (≤ 576 px) ========= */
-        @media (max-width:576px){
-        
-          /* beri jarak atas‑bawah via variable Bootstrap */
-          #iklanModal{ --bs-modal-margin:1rem; }
-        
-          #iklanModal .modal-dialog{
-              max-width:90vw!important;   /* kartu lebih ramping */
-              margin:auto;                /* biarkan Bootstrap “center” */
-              width:auto;
-          }
-        
-          #iklanModal .modal-body{
-              max-height:65vh;            /* batasi tinggi total */
-          }
-        
-          #iklanModal .modal-body img{
-              height:260px!important;     /* override tinggi gambar */
-          }
+        @media (max-width:576px) {
+
+            /* beri jarak atas‑bawah via variable Bootstrap */
+            #iklanModal {
+                --bs-modal-margin: 1rem;
+            }
+
+            #iklanModal .modal-dialog {
+                max-width: 90vw !important;
+                /* kartu lebih ramping */
+                margin: auto;
+                /* biarkan Bootstrap “center” */
+                width: auto;
+            }
+
+            #iklanModal .modal-body {
+                max-height: 65vh;
+                /* batasi tinggi total */
+            }
+
+            #iklanModal .modal-body img {
+                height: 260px !important;
+                /* override tinggi gambar */
+            }
         }
-        
+
         /* ===== versi layar >576 px (tinggi gambar 420 px) ===== */
-        @media (min-width:577px){
-          #iklanModal .modal-body img{
-              height:420px;               /* tinggi desktop */
-          }
+        @media (min-width:577px) {
+            #iklanModal .modal-body img {
+                height: 420px;
+                /* tinggi desktop */
+            }
         }
-        
+
         /* cegah scroll horisontal di mana pun */
         #iklanModal,
         #iklanModal .modal-dialog,
-        #iklanModal .modal-content{
-            overflow-x:hidden;
+        #iklanModal .modal-content {
+            overflow-x: hidden;
         }
-        
+
         /* hilangkan kompensasi scrollbar Bootstrap */
-        body.modal-open{ padding-right:0!important; }
-
-
-       
+        body.modal-open {
+            padding-right: 0 !important;
+        }
     </style>
 @endsection
 
@@ -241,7 +250,7 @@
             <div class="modal-content border rounded-3 shadow">
 
                 {{-- ==================== BODY ==================== --}}
-             <div class="modal-body pt-4 pb-2 p-0 position-relative">
+                <div class="modal-body pt-4 pb-2 p-0 position-relative">
 
                     <div id="carouselIklan" class="carousel slide" data-bs-ride="carousel">
 
@@ -249,32 +258,30 @@
                             @foreach ($donasiiklan as $idx => $item)
                                 @php
                                     $isPng = strtolower(pathinfo($item->file, PATHINFO_EXTENSION)) === 'png';
-                                    $link  = trim($item->link ?? '');
+                                    $link = trim($item->link ?? '');
                                     $label = trim($item->name_button_iklan ?? '');
-                                    $icon  = trim($item->icon_iklan ?? '');
+                                    $icon = trim($item->icon_iklan ?? '');
                                 @endphp
-                            
-                                <div class="carousel-item {{ $idx ? '' : 'active' }}"
-                                     data-link="{{ $link }}"
-                                     data-label="{{ $label }}"
-                                     data-icon="{{ $icon }}">
+
+                                <div class="carousel-item {{ $idx ? '' : 'active' }}" data-link="{{ $link }}"
+                                    data-label="{{ $label }}" data-icon="{{ $icon }}">
                                     <img src="{{ Storage::url($item->file) }}"
-                                         class="d-block mx-auto img-fluid {{ $isPng ? '' : 'bg-white' }}"
-                                         style="max-width:85%;max-height:380px;object-fit:contain;
+                                        class="d-block mx-auto img-fluid {{ $isPng ? '' : 'bg-white' }}"
+                                        style="max-width:85%;max-height:380px;object-fit:contain;
                                                 padding:{{ $isPng ? 0 : '10px' }};border-radius:.5rem;">
                                 </div>
                             @endforeach
 
 
-                          </div>
-                          
+                        </div>
 
-                       <button class="carousel-control-prev" type="button" data-bs-target="#carouselIklan" data-bs-slide="prev"
-                                style="background: none; border: none;">
+
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselIklan"
+                            data-bs-slide="prev" style="background: none; border: none;">
                             <i class="fas fa-chevron-left" style="color: #1363c6; font-size: 1.8rem;"></i>
                         </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#carouselIklan" data-bs-slide="next"
-                                style="background: none; border: none;">
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselIklan"
+                            data-bs-slide="next" style="background: none; border: none;">
                             <i class="fas fa-chevron-right" style="color: #1363c6; font-size: 1.8rem;"></i>
                         </button>
 
@@ -284,23 +291,19 @@
 
                 {{-- ==================== FOOTER ==================== --}}
                 <div class="modal-footer border-0 px-4 pb-4">
-                   @php
+                    @php
                         // ambil slide pertama (bisa null kalau koleksi kosong)
                         $first = $donasiiklan->first();
-                    
+
                         // ===== Label tombol =====
                         //  - kalau name_button_iklan null, "", atau "   " → default
-                        $label = blank($first?->name_button_iklan)
-                                 ? 'Berbagi Sekarang'
-                                 : $first->name_button_iklan;
-                    
+                        $label = blank($first?->name_button_iklan) ? 'Berbagi Sekarang' : $first->name_button_iklan;
+
                         // ===== Ikon tombol =====
                         //  - kalau icon_iklan null / "" / " " → default
-                        $ikon  = blank($first?->icon_iklan)
-                                 ? 'fa-money-bill-wave'
-                                 : $first->icon_iklan;
+                        $ikon = blank($first?->icon_iklan) ? 'fa-money-bill-wave' : $first->icon_iklan;
                     @endphp
-                    
+
                     <button id="openDonasiModal"
                         class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 rounded-pill shadow-sm">
                         <i id="btn-icon" class="fas {{ $ikon }}"></i>
@@ -315,7 +318,7 @@
         </div>
     </div>
 
-     <!-- Modal Donasi Start -->
+    <!-- Modal Donasi Start -->
     <div class="modal fade" id="donasiModal" tabindex="-1" aria-labelledby="donasiModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -340,19 +343,18 @@
                         <div class="mb-3">
                             <label class="form-label">Nomor HP </label>
                             <input type="tel" class="form-control" id="no_hp" name="no_hp"
-                                   placeholder="08xxxxxxxxxx">
+                                placeholder="08xxxxxxxxxx">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email"
-                                   placeholder="nama@email.com">
+                                placeholder="nama@email.com">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Doa atau Dukungan</label>
-                            <textarea class="form-control" id="feedback" name="feedback"
-                                      rows="3" placeholder="Tulis pesan atau doa…"></textarea>
+                            <textarea class="form-control" id="feedback" name="feedback" rows="3" placeholder="Tulis pesan atau doa…"></textarea>
                         </div>
 
                         <!-- Jenis Donasi -->
@@ -378,8 +380,10 @@
                             <div class="row row-cols-2 row-cols-md-4 g-3"> <!-- Bootstrap Grid -->
                                 @foreach ($programs as $program)
                                     <div class="col">
-                                        <div class="card program-card h-100" data-program="{{ $program->judul }}" data-program-id="{{ $program->id }}">
-                                            <img src="{{ asset('storage/' . $program->thumbnail_image) }}" class="card-img-top program-img img-fluid" alt="{{ $program->judul }}">
+                                        <div class="card program-card h-100" data-program="{{ $program->judul }}"
+                                            data-program-id="{{ $program->id }}">
+                                            <img src="{{ asset('storage/' . $program->thumbnail_image) }}"
+                                                class="card-img-top program-img img-fluid" alt="{{ $program->judul }}">
                                             <div class="card-body p-2 text-center">
                                                 <!--<small class="text-white">{{ Str::limit($program->judul, 20) }}</small>-->
                                             </div>
@@ -420,7 +424,8 @@
 
                         <!-- Pilihan Jumlah Donasi -->
                         <div class="mb-3">
-                            <label for="donasi" class="form-label">Pilih Jumlah Donasi <span class="text-danger">*</span></label>
+                            <label for="donasi" class="form-label">Pilih Jumlah Donasi <span
+                                    class="text-danger">*</span></label>
                             <div class="row">
                                 @foreach ([1, 25000, 50000, 75000, 100000] as $amount)
                                     <div class="col-4 mt-2">
@@ -595,10 +600,10 @@
     @if ($campaignMenu && $campaignMenu->status == 'Aktif')
         @include('LandingPageKilau.campaign_kilau', [
             'campaignMenu' => $campaignMenu,
-            'campaigns'    => $campaigns,
-            'page'         => $page,
-            'perPage'      => $perPage,
-            'lastPage'     => $lastPage
+            'campaigns' => $campaigns,
+            'page' => $page,
+            'perPage' => $perPage,
+            'lastPage' => $lastPage,
         ])
     @endif
 
@@ -689,7 +694,7 @@
     @endif
 
     @if ($testimoniMenu && $testimoniMenu->status == 'Aktif')
-       @include('LandingPageKilau.testimoni')
+        @include('LandingPageKilau.testimoni')
     @endif
 
     {{--  @if ($testimoniMenu && $testimoniMenu->status == 'Aktif')
@@ -922,8 +927,128 @@
     <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
 
     <script>
-        
+        $(function() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const debounce = (fn, ms = 500) => {
+                let t;
+                return (...a) => {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn.apply(this, a), ms);
+                };
+            };
+
+            function cleanPhone(raw) {
+                return (raw || '').toString().replace(/\D+/g, '');
+            }
+
+            function fillForm(d) {
+                if (d.nama && !$('#nama').val()) $('#nama').val(d.nama);
+                if (d.email && $('#email').val() !== d.email) $('#email').val(d.email);
+                if (d.no_hp && $('#no_hp').val() !== d.no_hp) $('#no_hp').val(d.no_hp);
+            }
+
+            // ====== GUARD STATE ======
+            let isPromptOpen = false;
+            const handledKeys = new Set(); // kombinasi email+hp yang sudah diproses
+            let lookupXHR = null;
+
+            const keyOf = (email, hp) => `e:${(email||'').toLowerCase()}|p:${hp||''}`;
+
+            const doLookup = debounce(function() {
+                let email = ($('#email').val() || '').trim();
+                let no_hp = cleanPhone($('#no_hp').val());
+                if ($('#no_hp').val() !== no_hp) $('#no_hp').val(no_hp); // normalisasi hanya jika berubah
+
+                const canCheck = (email && emailRegex.test(email)) || (no_hp && no_hp.length >= 9);
+                if (!canCheck || isPromptOpen) return;
+
+                const key = keyOf(email, no_hp);
+                if (handledKeys.has(key)) return; // sudah ditangani sebelumnya
+
+                // Batalkan request sebelumnya bila ada
+                if (lookupXHR) {
+                    try {
+                        lookupXHR.abort();
+                    } catch (e) {}
+                    lookupXHR = null;
+                }
+
+                lookupXHR = $.ajax({
+                    url: "{{ route('donasi.cek-donatur') }}",
+                    method: "GET",
+                    data: {
+                        email: emailRegex.test(email) ? email : undefined,
+                        no_hp: (no_hp && no_hp.length >= 9) ? no_hp : undefined
+                    },
+                    complete: function() {
+                        lookupXHR = null;
+                    },
+                    success: function(res) {
+                        if (!res || !res.found || !res.data) return;
+
+                        const via = res.source === 'email' ? 'Email' : 'No HP';
+                        const nm = res.data.nama || '(tanpa nama)';
+                        const em = res.data.email || '-';
+                        const hp = res.data.no_hp || '-';
+
+                        isPromptOpen = true;
+                        Swal.fire({
+                            icon: 'question',
+                            title: 'Data donatur ditemukan',
+                            html: `${via} sudah terdaftar atas nama <b>${nm}</b><br>` +
+                                `Email: <b>${em}</b><br>` +
+                                `No HP: <b>${hp}</b><br><br>` +
+                                `Apakah ingin memakai data ini untuk mengisi form?`,
+                            showCancelButton: true,
+                            confirmButtonText: 'Pakai',
+                            cancelButtonText: 'Tidak'
+                        }).then((r) => {
+                            isPromptOpen = false;
+                            handledKeys.add(
+                            key); // tandai: jangan munculkan lagi untuk kombinasi ini
+                            if (r.isConfirmed) fillForm(res.data);
+                        });
+                    },
+                    error: function() {
+                        /* boleh diam */ }
+                });
+            }, 600);
+
+            // Hanya dengarkan 'input' untuk mengurangi duplikasi
+            $('#email').on('input', doLookup);
+            $('#no_hp').on('input', doLookup);
+
+            // ===== Validasi sebelum submit (tetap seperti punyamu) =====
+            $('#donasiForm').on('submit', function(e) {
+                const nama = ($('#nama').val() || '').trim();
+                const email = ($('#email').val() || '').trim();
+                const nohp = cleanPhone($('#no_hp').val());
+
+                if (!nama) {
+                    e.preventDefault();
+                    return Swal.fire({
+                        icon: 'warning',
+                        title: 'Nama wajib diisi'
+                    });
+                }
+                if (email && !emailRegex.test(email)) {
+                    e.preventDefault();
+                    return Swal.fire({
+                        icon: 'warning',
+                        title: 'Format email tidak valid'
+                    });
+                }
+                if (nohp && nohp.length < 9) {
+                    e.preventDefault();
+                    return Swal.fire({
+                        icon: 'warning',
+                        title: 'No HP minimal 9 digit'
+                    });
+                }
+            });
+        });
     </script>
+
     <script>
         $(document).ready(function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -988,7 +1113,7 @@
         });
 
         $(document).ready(function() {
-            $('#donasiModal').on('shown.bs.modal', function () {
+            $('#donasiModal').on('shown.bs.modal', function() {
                 $.post('{{ route('track.donasi.modal') }}', {
                     _token: $('meta[name="csrf-token"]').attr('content')
                 });
@@ -1078,7 +1203,8 @@
                         if (response.success_percentage) {
                             $('#program-title').text('Deskripsi Program ' + programJudul);
                             // $('#program-description').text(response.description);
-                            $('#program-description').text($('<div>').html(response.description).text());
+                            $('#program-description').text($('<div>').html(response.description)
+                                .text());
                             $('#program-statistics').text(response.success_percentage +
                                 ' orang telah terdampak dari target ' + response.target +
                                 ' penerima manfaat');
@@ -1097,7 +1223,7 @@
             }
 
             // Menangani pengiriman form donasi
-            $('#donasiForm').on('submit', function (e) {
+            $('#donasiForm').on('submit', function(e) {
                 e.preventDefault(); // Mencegah form agar tidak submit secara normal
 
                 var amount = $('#donasiForm').data('amount');
@@ -1124,13 +1250,13 @@
                         id_program: programId,
                         opsional_umum: opsionalValue,
 
-                        no_hp   : $('#no_hp').val(),
-                        email   : $('#email').val(),
+                        no_hp: $('#no_hp').val(),
+                        email: $('#email').val(),
                         feedback: $('#feedback').val(),
-                        
+
                         _token: '{{ csrf_token() }}'
                     },
-                    success: function (response) {
+                    success: function(response) {
                         var donasiId = response.donasi_id;
 
                         Swal.fire({
@@ -1145,14 +1271,15 @@
                                     url: 'https://kilauindonesia.org/api/get_token_midtrans_sb',
                                     type: 'POST',
                                     data: {
-                                        order_id: donasiId, 
+                                        order_id: donasiId,
                                         // order_id: 'donasi-' + donasiId
                                         total: amount
                                     },
-                                    success: function (res) {
+                                    success: function(res) {
                                         if (res.token) {
                                             snap.pay(res.token, {
-                                                onSuccess: function (result) {
+                                                onSuccess: function(
+                                                    result) {
                                                     Swal.fire(
                                                         'Terima kasih! 🤲',
                                                         'Donasi Anda berhasil. Semoga berkah! 😊',
@@ -1160,37 +1287,80 @@
                                                     );
 
                                                     // Pastikan donasiModal sudah terdefinisi
-                                                    var donasiModal = bootstrap.Modal.getInstance(document.getElementById('donasiModal'));
-                                                    if (!donasiModal) {
-                                                        donasiModal = new bootstrap.Modal(document.getElementById('donasiModal'));
+                                                    var donasiModal =
+                                                        bootstrap
+                                                        .Modal
+                                                        .getInstance(
+                                                            document
+                                                            .getElementById(
+                                                                'donasiModal'
+                                                            )
+                                                        );
+                                                    if (!
+                                                        donasiModal
+                                                    ) {
+                                                        donasiModal
+                                                            =
+                                                            new bootstrap
+                                                            .Modal(
+                                                                document
+                                                                .getElementById(
+                                                                    'donasiModal'
+                                                                )
+                                                            );
                                                     }
-                                                    donasiModal.hide();
-                                                    
+                                                    donasiModal
+                                                        .hide();
+
                                                     // lanjut update status
-                                                    fetch('/donasi/' + donasiId + '/update-status', {
-                                                        method: 'POST',
-                                                        headers: {
-                                                            'Content-Type': 'application/json',
-                                                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                                                        },
-                                                        body: JSON.stringify({
-                                                            status: 2
-                                                        })
-                                                    })
-                                                    .then(res => res.json())
-                                                    .then(data => {
-                                                        console.log('Status updated:', data);
-                                                    })
-                                                    .catch(err => console.error('Gagal update status', err));
+                                                    fetch('/donasi/' +
+                                                            donasiId +
+                                                            '/update-status', {
+                                                                method: 'POST',
+                                                                headers: {
+                                                                    'Content-Type': 'application/json',
+                                                                    'X-CSRF-TOKEN': $(
+                                                                            'meta[name="csrf-token"]'
+                                                                        )
+                                                                        .attr(
+                                                                            'content'
+                                                                        )
+                                                                },
+                                                                body: JSON
+                                                                    .stringify({
+                                                                        status: 2
+                                                                    })
+                                                            })
+                                                        .then(
+                                                            res =>
+                                                            res
+                                                            .json()
+                                                        )
+                                                        .then(
+                                                            data => {
+                                                                console
+                                                                    .log(
+                                                                        'Status updated:',
+                                                                        data
+                                                                    );
+                                                            })
+                                                        .catch(
+                                                            err =>
+                                                            console
+                                                            .error(
+                                                                'Gagal update status',
+                                                                err
+                                                            )
+                                                        );
                                                 },
-                                                onPending: function () {
+                                                onPending: function() {
                                                     Swal.fire({
                                                         icon: 'info',
                                                         title: 'Pembayaran Sedang Diproses',
                                                         text: 'Mohon tunggu hingga pembayaran selesai.',
                                                     });
                                                 },
-                                                onError: function () {
+                                                onError: function() {
                                                     Swal.fire({
                                                         icon: 'error',
                                                         title: 'Pembayaran Gagal',
@@ -1206,7 +1376,7 @@
                                             });
                                         }
                                     },
-                                    error: function () {
+                                    error: function() {
                                         Swal.fire({
                                             icon: 'error',
                                             title: 'Gagal Terhubung ke Midtrans',
@@ -1217,7 +1387,7 @@
                             }
                         });
                     },
-                    error: function () {
+                    error: function() {
                         Swal.fire({
                             icon: 'error',
                             title: 'Gagal Menyimpan Donasi',
@@ -1227,33 +1397,44 @@
                 });
             });
 
-            (function initFromQuery(){
-                const params   = new URLSearchParams(window.location.search);
-                const id       = params.get('donasi');
+            (function initFromQuery() {
+                const params = new URLSearchParams(window.location.search);
+                const id = params.get('donasi');
                 if (!id) return;
 
                 const modalEl = document.getElementById('donasiModal');
                 if (modalEl && typeof bootstrap !== 'undefined') {
-                modalEl.addEventListener('shown.bs.modal', function onShown() {
-                    modalEl.removeEventListener('shown.bs.modal', onShown);
+                    modalEl.addEventListener('shown.bs.modal', function onShown() {
+                        modalEl.removeEventListener('shown.bs.modal', onShown);
 
-                    // aktifkan mode Program
-                    if ($('#donasiProgramBtn').length) $('#donasiProgramBtn').trigger('click');
-                    else { $('#program-cards').show(); $('#opsionalUmum').hide(); }
+                        // aktifkan mode Program
+                        if ($('#donasiProgramBtn').length) $('#donasiProgramBtn').trigger('click');
+                        else {
+                            $('#program-cards').show();
+                            $('#opsionalUmum').hide();
+                        }
 
-                    // klik kartu agar handler-mu jalan (set #programIdInput + fetchProgramInfo)
-                    const select = () => {
-                    const $card = $(`#program-cards .program-card[data-program-id="${id}"]`);
-                    if ($card.length) { $card.addClass('selected-btn').trigger('click'); return true; }
-                    return false;
-                    };
-                    if (!select()) {
-                    let tries = 0;
-                    const iv = setInterval(() => { if (select() || ++tries >= 10) clearInterval(iv); }, 120);
-                    }
-                }, { once:true });
+                        // klik kartu agar handler-mu jalan (set #programIdInput + fetchProgramInfo)
+                        const select = () => {
+                            const $card = $(
+                                `#program-cards .program-card[data-program-id="${id}"]`);
+                            if ($card.length) {
+                                $card.addClass('selected-btn').trigger('click');
+                                return true;
+                            }
+                            return false;
+                        };
+                        if (!select()) {
+                            let tries = 0;
+                            const iv = setInterval(() => {
+                                if (select() || ++tries >= 10) clearInterval(iv);
+                            }, 120);
+                        }
+                    }, {
+                        once: true
+                    });
 
-                bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
                 }
             })();
         });
