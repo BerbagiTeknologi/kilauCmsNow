@@ -39,11 +39,13 @@ class DashboardController extends Controller
         $totalKantorCabang = Kontak::count();
 
         // Ambil semua data donasi (baik umum maupun program)
-        $donasi = DonasiKilau::orderBy('created_at', 'desc')->get();
+        // $donasi = DonasiKilau::orderBy('created_at', 'desc')->get();
+        $donasi = DonasiKilau::latest('created_at')->get();
+
 
         // Format tanggal dan menambahkan informasi tambahan jika diperlukan
         $donasi = $donasi->map(function($data) {
-                $data->formatted_date = $data->created_at->format('d M Y');  // Format to '28 Feb 2025'
+                $data->formatted_date = $data->created_at->format('d M Y'); 
                 return $data;
         });
 
