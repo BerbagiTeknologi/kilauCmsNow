@@ -64,20 +64,37 @@ class GaleriAdminController extends Controller
         $galeri->deskripsi_kegiatan = $request->deskripsi_kegiatan;
         $galeri->nama_kantor_cabang = $request->nama_kantor_cabang;
 
-        // Menangani upload gambar baru jika ada
+        // 1. Proses hapus gambar yang dicentang terlebih dahulu
+        if ($deleteImages = $request->input('delete_images', [])) {
+            $remainingImages = [];
+            foreach ($galeri->file_galeri as $image) {
+                if (!in_array($image, $deleteImages)) {
+                    $remainingImages[] = $image;
+                } else {
+                    // Hapus file dari storage
+                    Storage::disk('public')->delete($image);
+                }
+            }
+            $galeri->file_galeri = $remainingImages;
+        }
+
+        // 2. Proses upload gambar baru jika ada
         if ($request->hasFile('file_galeri')) {
-            $images = [];
+            // Ambil gambar yang sudah ada (setelah proses hapus)
+            $existingImages = $galeri->file_galeri ?? [];
+            
+            // Proses gambar baru
+            $newImages = [];
             foreach ($request->file('file_galeri') as $image) {
                 // Menyimpan gambar di storage public dan menambah path ke array
                 $path = $image->store('galeri_file', 'public');
-                $images[] = $path;
+                $newImages[] = $path;
             }
-            // Menyimpan array path gambar ke kolom foto_image
-            $galeri->file_galeri = $images;
-        } else {
-            // Jika tidak ada gambar baru, tetap menyimpan gambar lama
-            $galeri->file_galeri = $galeri->file_galeri; 
+            
+            // Gabungkan gambar lama dengan gambar baru
+            $galeri->file_galeri = array_merge($existingImages, $newImages);
         }
+        // Jika tidak ada gambar baru, tidak perlu melakukan apa-apa karena gambar lama sudah ada
 
 
         // Menyimpan data program setelah diperbarui

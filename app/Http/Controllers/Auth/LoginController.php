@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Models\DonasiKilau;
-use Illuminate\Http\Request;
-use App\Models\DonasiHistory;
 use App\Http\Controllers\Controller;
+use App\Models\DonasiHistory;
+use App\Models\DonasiKilau;
+use App\Models\User;
+use App\Services\SsoUserInfoClient;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class LoginController extends Controller
 {
@@ -60,119 +66,7 @@ class LoginController extends Controller
         return view('Auth.profile', compact('user','histories','statusMap','opsionalUmumMap'));
     }
 
-    /* public function loginProses(Request $request)
-    {
-        // Validasi input
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string|min:6',
-        ]);
-
-        $response = $this->makeApiRequest([
-            'email' => $request->email,
-            'password' => $request->password,
-        ]);
-
-        if ($response->status() == 200) {
-            $data = $response->json();
-
-            // Debug response dari API eksternal
-            // dd($data);
-
-            if (isset($data['token'])) {
-                // Simpan data user ke session
-                session([
-                    // 'user_id' => $data['berhasil']['id'],
-                    'user_name' => $data['berhasil']['nama'],
-                    'user_email' => $data['berhasil']['email'],
-                    'user_role' => $data['berhasil']['cms'] ?? 'admin',
-                    'user_token' => $data['token'],
-                ]);
-
-                // Redirect ke dashboard
-                return response()->json([
-                    'message' => 'Login berhasil!',
-                    'redirect_url' => route('dashboardlogin'),
-                ]);
-            }
-
-            return response()->json([
-                'error' => 'Akun Anda tidak memiliki token.',
-            ], 400);
-        }
-
-        return response()->json([
-            'error' => $response->json()['message'] ?? 'Login gagal.',
-        ], $response->status());
-    } */
-
-     /* private function makeApiRequest(array $data)
-    {
-        try {
-            return Http::post('https://kilauindonesia.org/api/login_sso', $data);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Gagal menghubungi server eksternal.'], 500);
-        }
-    } */
-
-    /* public function loginProses(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string|min:6',
-        ]);
-    
-        $response = $this->makeApiRequest([
-            'email' => $request->email,
-            'password' => $request->password,
-        ]);
-    
-        if ($response->status() == 200) {
-            $data = $response->json();
-    
-            if (isset($data['token'])) {
-                // Simpan data ke session
-                session([
-                    'user_id'    => $data['berhasil']['id'], 
-                    'user_name'  => $data['berhasil']['nama'],
-                    'user_email' => $data['berhasil']['email'],
-                    'user_role'  => $data['berhasil']['cms'] ?? null,  // bisa null
-                    'user_token' => $data['token'],
-                    'user_level' => $data['berhasil']['level'],
-                    'user_referral_code' => $data['berhasil']['referral_code'] ?? null,
-                    'user_photo'  => $data['berhasil']['foto'] ?? null,
-                ]);
-    
-                // Hanya user dengan CMS = admin yang boleh ke dashboard
-                $redirectUrl = ($data['berhasil']['cms'] === 'admin')
-                    ? route('dashboard')
-                    : route('home');
-    
-                return response()->json([
-                    'message' => 'Login berhasil!',
-                    'redirect_url' => $redirectUrl,
-                    'token' => session('user_token'),
-                    'user' => [
-                         'id'            => $data['berhasil']['id'],      // NEW
-                        'name'          => session('user_name'),
-                        'email'         => session('user_email'),
-                        'name' => session('user_name'),
-                        'level' => session('user_level'),
-                        'referral_code' => session('user_referral_code'),
-                        'photo' => session('user_photo'), 
-                    ],
-                ]);
-            }
-    
-            return response()->json([
-                'error' => 'Your account does not contain a token.',
-            ], 400);
-        }
-    
-        return response()->json([
-            'error' => $response->json()['message'] ?? 'Login failed.',
-        ], $response->status());
-    } */
+  
 
     public function loginProses(Request $request)
     {
@@ -181,75 +75,225 @@ class LoginController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
-        $response = $this->makeApiRequest([
+        $credentials = [
             'email'    => $request->email,
             'password' => $request->password,
-        ]);
+        ];
 
-        if ($response->status() == 200) {
-            $data = $response->json();
+        $driver = config('kilau.auth_driver', 'remote');
 
-            if (isset($data['token'])) {
-                $ok       = $data['berhasil'] ?? [];
-                $fotoUmum = $ok['foto_users_umum'] ?? null;  // ← URL penuh dari API showUser
-                $fotoOld  = $ok['foto'] ?? null;             // ← URL lama (upload)
-                $chosen   = $fotoUmum ?: $fotoOld;           // ← prioritas usersumum
+        $response = $driver === 'local'
+            ? $this->authenticateLocally($credentials)
+            : $this->makeApiRequest($credentials);
 
-                // Simpan data ke session
-                session([
-                    'user_id'            => $ok['id'] ?? null,
-                    'user_name'          => $ok['nama'] ?? null,
-                    'user_email'         => $ok['email'] ?? null,
-                    'user_role'          => $ok['cms'] ?? null,
-                    'user_token'         => $data['token'],
-                    'user_level'         => $ok['level'] ?? null,
-                    'user_referral_code' => $ok['referral_code'] ?? null,
-                    'user_photo'         => $chosen,          // ← yang dipakai navbar/avatar
-                    'user_photo_umum'    => $fotoUmum,        // ← simpan juga kalau perlu
-                    'user_photo_legacy'  => $fotoOld,
-                ]);
-
-                // Hanya CMS admin boleh ke dashboard
-                $redirectUrl = ($ok['cms'] ?? null) === 'admin'
-                    ? route('dashboard')
-                    : route('home');
-
-                return response()->json([
-                    'message'      => 'Login berhasil!',
-                    'redirect_url' => $redirectUrl,
-                    'token'        => session('user_token'),
-                    'user'         => [
-                        'id'             => session('user_id'),
-                        'name'           => session('user_name'),
-                        'email'          => session('user_email'),
-                        'level'          => session('user_level'),
-                        'referral_code'  => session('user_referral_code'),
-                        // kirim dua-duanya + satu pilihan final
-                        'photo'              => $chosen,
-                        'photo_users_umum'   => $fotoUmum,
-                        'photo_legacy'       => $fotoOld,
-                    ],
-                ]);
-            }
-
+        if ($response->status() !== 200) {
+            $request->session()->flush();
             return response()->json([
-                'error' => 'Your account does not contain a token.',
+                'error' => $response->json()['message'] ?? 'Login gagal.',
+            ], $response->status());
+        }
+
+        $data = $response->json();
+        $accessToken = $data['access_token'] ?? $data['token'] ?? null;
+
+        if (!$accessToken) {
+            $request->session()->flush();
+            return response()->json([
+                'error' => 'Token SSO tidak ditemukan pada respons.',
             ], 400);
         }
 
+        if ($driver === 'local') {
+            $payload = $this->buildLocalPayload($data);
+        } else {
+            try {
+                $payload = app(SsoUserInfoClient::class)->fetch($accessToken);
+            } catch (UnauthorizedHttpException $e) {
+                $request->session()->flush();
+                return response()->json([
+                    'error' => $e->getMessage(),
+                ], 401);
+            }
+        }
+
+        $appSlug = config('sso.app_slug');
+        $apps = $payload['apps_allowed'] ?? [];
+        if ($appSlug && (!is_array($apps) || !in_array($appSlug, $apps, true))) {
+            $request->session()->flush();
+            return response()->json([
+                'error' => 'Aplikasi tidak diizinkan untuk token ini.',
+            ], 403);
+        }
+
+        $role = $this->resolveLocalRole($payload);
+        $photo = $payload['picture'] ?? null;
+
+        $localUser = $this->syncLocalUser($payload, $role);
+        $role = $localUser->role ?? $role;
+
+        session([
+            'user_id'    => $payload['sub'] ?? null,
+            'user_name'  => $payload['name'] ?? null,
+            'user_email' => $payload['email'] ?? null,
+            'user_role'  => $role,
+            'user_token' => $accessToken,
+            'user_photo' => $photo,
+            'user_payload' => $payload,
+        ]);
+
+        $this->claimPastDonations(
+            userId: session('user_id'),
+            email: session('user_email'),
+            phone: $payload['phone'] ?? null,
+            token: $accessToken
+        );
+
+        $redirectUrl = $role === 'admin'
+            ? route('dashboard')
+            : route('home');
+
         return response()->json([
-            'error' => $response->json()['message'] ?? 'Login failed.',
-        ], $response->status());
+            'message'      => 'Login berhasil!',
+            'redirect_url' => $redirectUrl,
+            'token'        => $accessToken,
+            'user'         => [
+                'id'    => session('user_id'),
+                'name'  => session('user_name'),
+                'email' => session('user_email'),
+                'role'  => $role,
+                'photo' => $photo,
+            ],
+        ]);
     }
 
     private function makeApiRequest(array $data)
     {
+        $url = rtrim(config('sso.management_base_url'), '/').'/api/auth/login';
+        $request = Http::timeout(config('sso.timeout', 5));
+
+        $accept = config('sso.accept_header');
+        $request = $accept
+            ? $request->withHeaders(['Accept' => $accept])
+            : $request->acceptJson();
+
         try {
-            return Http::post('https://kilauindonesia.org/api/login_sso', $data);
+            return $request->post($url, $data);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Gagal menghubungi server eksternal.'], 500);
+            return Http::response([
+                'message' => 'Gagal menghubungi server SSO.',
+            ], 500);
         }
-    }   
+    }
+
+    private function authenticateLocally(array $credentials)
+    {
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return Http::response([
+                'message' => 'Invalid credentials.',
+            ], 401);
+        }
+
+        $token = hash('sha256', $user->id.'|'.Str::random(60));
+
+        return Http::response([
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'expires_in'   => 3600,
+            'user' => [
+                'sub'    => $user->sso_sub ?? $user->id,
+                'name'   => $user->name,
+                'email'  => $user->email,
+                'role'   => $user->role ?? 'admin',
+            ],
+        ], 200);
+    }
+
+    private function buildLocalPayload(array $data): array
+    {
+        $user = $data['user'] ?? [];
+        $appSlug = config('sso.app_slug');
+
+        return [
+            'sub' => $user['sub'] ?? null,
+            'email' => $user['email'] ?? null,
+            'name' => $user['name'] ?? null,
+            'apps_allowed' => $appSlug ? [$appSlug] : [],
+        ];
+    }
+
+    private function resolveLocalRole(array $payload): string
+    {
+        $default = config('sso.default_role', 'user');
+        $sub = $payload['sub'] ?? null;
+        $email = $payload['email'] ?? null;
+
+        $user = User::query()
+            ->when($sub, fn ($q) => $q->where('sso_sub', $sub))
+            ->when(!$sub && $email, fn ($q) => $q->orWhere('email', $email))
+            ->first();
+
+        return $user?->role ?? $default;
+    }
+
+    private function syncLocalUser(array $payload, string $role): User
+    {
+        $sub = $payload['sub'] ?? null;
+        $email = $payload['email'] ?? null;
+
+        $user = User::query()
+            ->when($sub, fn ($q) => $q->where('sso_sub', $sub))
+            ->when(!$sub && $email, fn ($q) => $q->orWhere('email', $email))
+            ->first();
+
+        if (!$user) {
+            $user = new User();
+            $user->sso_sub = $sub;
+            $user->email = $email;
+            $user->password = Hash::make(Str::random(32));
+        }
+
+        $user->name = $payload['name'] ?? $user->name;
+        $user->sso_payload = $payload;
+        $user->role = $user->role ?? $role;
+
+        $user->save();
+
+        return $user;
+    }
+
+    private function claimPastDonations(?int $userId, ?string $email, ?string $phone, ?string $token): void
+    {
+        if (!$userId || (!$email && !$phone)) {
+            return;
+        }
+
+        // Cocokkan donasi yang belum diklaim berdasarkan email atau no_hp, tanpa menimpa klaim yang sudah ada.
+        $candidateDonasiIds = DonasiKilau::query()
+            ->where(function ($q) use ($email, $phone) {
+                if ($email) {
+                    $q->orWhere('email', $email);
+                }
+
+                if ($phone) {
+                    $q->orWhere('no_hp', $phone);
+                }
+            })
+            ->pluck('id');
+
+        if ($candidateDonasiIds->isEmpty()) {
+            return;
+        }
+
+        // Update histori yang belum punya external_user_id
+        DonasiHistory::whereNull('external_user_id')
+            ->whereIn('donasikilau_id', $candidateDonasiIds)
+            ->update([
+                'external_user_id' => $userId,
+                'token' => $token,
+            ]);
+    }
 
     public function register() {
         return view('Auth.register');
