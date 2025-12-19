@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\LandingPage;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProgramReferral;
-use App\Models\ReferralWithdrawal;
+use App\Models\DonasiKilau;
+use App\Models\Program;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Schema;
 
 class PointReferallController extends Controller
 {
@@ -72,75 +72,65 @@ class PointReferallController extends Controller
 
     public function pointReferall()
     {
-        $referralKey = session('user_referral_code');
-        abort_if(!$referralKey, 403, 'Silakan login');
+        $affiliateSub = session('user_sub') ?? session('user_id');
+        abort_if(!$affiliateSub, 403, 'Silakan login');
 
-        /* ──────────────────────────
-        * 1. Referral milik user
-        * ────────────────────────── */
-        $referrals = ProgramReferral::with('program')
-                    ->where('referer_name', $referralKey)
-                    ->get();
+        $affiliateSub = (string) $affiliateSub;
+        $affiliateSubEncoded = urlencode($affiliateSub);
 
-        $totalUang = $referrals->sum(fn ($r) => $r->click_count * 1000);
+        $baseUrl = url('/');
 
-        /* ──────────────────────────
-        * 2. Withdrawal terbaru per-referral
-        *    (id terbesar / requested_at terbaru)
-        * ────────────────────────── */
-        $withdrawals = ReferralWithdrawal::whereIn(
-                            'program_referral_id',
-                            $referrals->pluck('id')
-                        )
-                        ->orderByDesc('requested_at')   // urutkan dari yang paling baru
-                        ->get()
-                        ->groupBy('program_referral_id') // kumpulkan per referral
-                        ->map->first();                 // ambil elemen pertama (terbaru)
+        $shareLinkUmum = $baseUrl . '?aff=' . $affiliateSubEncoded;
 
-        /*  $withdrawals kini berupa Collection
-            key   = program_referral_id
-            value = 1 objek ReferralWithdrawal (terbaru)  */
+        $programs = Program::query()
+            ->select('id', 'judul', 'status_program')
+            ->where('status_program', Program::PROGRAM_AKTIF)
+            ->orderByDesc('id')
+            ->get();
+
+        $affiliateColumnReady = Schema::hasColumn('donasikilau', 'affiliate_sub');
+
+        $totalDonasi = 0;
+        $totalTransaksi = 0;
+        $totalPending = 0;
+        $totalAktif = 0;
+        $donasiTerbaru = collect();
+
+        if ($affiliateColumnReady) {
+            $totalDonasi = (float) DonasiKilau::where('affiliate_sub', $affiliateSub)->sum('total_donasi');
+            $totalTransaksi = DonasiKilau::where('affiliate_sub', $affiliateSub)->count();
+            $totalPending = DonasiKilau::where('affiliate_sub', $affiliateSub)
+                ->where('status_donasi', DonasiKilau::DONASI_PENDING)
+                ->count();
+            $totalAktif = DonasiKilau::where('affiliate_sub', $affiliateSub)
+                ->where('status_donasi', DonasiKilau::DONASI_AKTIVE)
+                ->count();
+
+            $donasiTerbaru = DonasiKilau::with(['program:id,judul'])
+                ->where('affiliate_sub', $affiliateSub)
+                ->select('id', 'type_donasi', 'opsional_umum', 'id_program', 'nama', 'total_donasi', 'status_donasi', 'created_at')
+                ->latest('created_at')
+                ->take(20)
+                ->get();
+        }
 
         return view('LandingPageKilau.Components.point-referal', [
-            'referrals'   => $referrals,
-            'withdrawals' => $withdrawals,
-            'totalUang'   => $totalUang,
-            'userName'    => session('user_name'),
-            'userEmail'   => session('user_email'),
+            'affiliateSub' => $affiliateSub,
+            'shareLinkUmum' => $shareLinkUmum,
+            'programs' => $programs,
+            'affiliateColumnReady' => $affiliateColumnReady,
+            'totalDonasi' => $totalDonasi,
+            'totalTransaksi' => $totalTransaksi,
+            'totalPending' => $totalPending,
+            'totalAktif' => $totalAktif,
+            'donasiTerbaru' => $donasiTerbaru,
+            'userName' => session('user_name'),
+            'userEmail' => session('user_email'),
         ]);
     }
 
     public function storeWithdrawal(Request $request)
     {
-        $rules = [
-            'program_referral_id' => 'required|exists:program_referrals,id',
-            'nama_lengkap'        => 'required|string|max:255',
-            'email'               => 'required|email|max:255',
-            'no_hp'               => 'required|string|max:30',
-            'no_rekening'         => 'required|string|max:50',
-            'nama_bank'           => 'required|string|max:50',
-        ];
-        $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
-        // pastikan referral milik user
-        ProgramReferral::where('id', $request->program_referral_id)
-            ->where('referer_name', session('user_referral_code'))
-            ->firstOrFail();
-
-        ReferralWithdrawal::create([
-            'program_referral_id' => $request->program_referral_id,
-            'nama_lengkap'        => $request->nama_lengkap,
-            'email'               => $request->email,
-            'no_hp'               => $request->no_hp,
-            'no_rekening'         => $request->no_rekening,
-            'nama_bank'           => $request->nama_bank,
-            'status'              => ReferralWithdrawal::PENDING,
-            'requested_at'        => now(), 
-        ]);
-
-        return back()->with('success', 'Pengajuan pencairan berhasil dikirim. Tunggu verifikasi.');
+        return back()->with('error', 'Fitur pencairan referral tidak digunakan lagi.');
     }
 }

@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
 {
@@ -343,6 +344,7 @@ class HomeController extends Controller
             'total' => 'required|numeric|min:1',
             'id_program' => 'nullable|exists:programs,id',
             'opsional_umum' => 'nullable|in:1,2', 
+            'affiliate_sub' => 'nullable|string|max:64',
 
             'no_hp'        => 'nullable|string|max:20',
             'email'        => 'nullable|email|max:255',
@@ -375,6 +377,11 @@ class HomeController extends Controller
             if ($request->filled($field)) {
                 $donasi->$field = $request->$field;
             }
+        }
+
+        $affiliateSub = trim((string) $request->input('affiliate_sub', ''));
+        if ($affiliateSub !== '' && Schema::hasColumn('donasikilau', 'affiliate_sub')) {
+            $donasi->affiliate_sub = $affiliateSub;
         }
         
         // Simpan data donasi

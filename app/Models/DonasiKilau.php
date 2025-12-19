@@ -29,7 +29,8 @@ class DonasiKilau extends Model
         'status_donasi',
         'feedback',
         'no_hp',
-        'email'
+        'email',
+        'affiliate_sub',
     ];
 
     protected $appends = ['formatted_date', 'jenis_donasi'];

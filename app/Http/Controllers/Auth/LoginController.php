@@ -22,13 +22,16 @@ class LoginController extends Controller
 
     public function getDataUsersProfile(Request $request)
     {
-        // Ambil user_id dari session (diset saat loginProses)
-        $externalUserId = session('user_id');
+        // Ambil identitas user dari session (hasil loginProses atau middleware sso.auth)
+        $externalUserId = session('user_id') ?? session('user_sub');
 
         // Kalau belum login, arahkan ke halaman login (opsional)
         if (!$externalUserId) {
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
+
+        $role = session('user_role') ?? config('sso.default_role', 'user');
+        $level = $role === 'admin' ? 'admin' : 'donatur';
 
         // Ambil histori donasi user + relasi donasi & program
         $histories = DonasiHistory::with([
@@ -43,11 +46,12 @@ class LoginController extends Controller
 
         // Data profil dasar dari session (untuk render cepat di blade)
         $user = [
-            'id'            => session('user_id'),
+            'id'            => $externalUserId,
             'nama'          => session('user_name'),
             'email'         => session('user_email'),
-            'level'         => session('user_level'),
-            'referral_code' => session('user_referral_code'),
+            'level'         => $level,
+            // Kode referral belum tersedia di SSO baru (sementara tampilkan "-").
+            'referral_code' => null,
             'foto'          => session('user_photo'),
         ];
 
