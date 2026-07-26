@@ -1,0 +1,405 @@
+<!-- Sidebar -->
+<div class="sidebar" data-background-color="light">
+    <div class="sidebar-logo">
+        <div class="logo-header" data-background-color="light">
+            <a href="index.html" class="logo">
+                <img src="<?php echo e(asset('assets_admin/img/LogoKilau2.png')); ?>" alt="Kilau" class="navbar-brand"
+                    height="50" width="50" />
+                <p style="color: black; padding-top: 10px; font-weight: 500;">Kilau Indonesia</p>
+            </a>
+            <div class="nav-toggle">
+                <button class="btn btn-toggle toggle-sidebar">
+                    <i class="gg-menu-right" style="color: black;"></i>
+                </button>
+                <button class="btn btn-toggle sidenav-toggler">
+                    <i class="gg-menu-left" style="color: black;"></i>
+                </button>
+            </div>
+            <button class="topbar-toggler more">
+                <i class="gg-more-vertical-alt" style="color: black;"></i>
+            </button>
+        </div>
+    </div>
+    <div class="sidebar-wrapper scrollbar scrollbar-inner">
+        <div class="sidebar-content">
+            <ul class="nav nav-primary">
+                <!-- Home Section -->
+                <li
+                    class="nav-item <?php echo e(Request::routeIs('dashboard') || Request::routeIs('dashboard.analytics') || Request::routeIs('settingsmenu') || Request::routeIs('admin.users.*') ? 'active' : ''); ?> nav-category">
+                    <p>Home</p>
+                </li>
+                <li class="nav-item <?php echo e(Request::routeIs('dashboard') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('dashboard')); ?>">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <p>Dashboard</p>
+                    </a>
+                </li>
+
+                <li class="nav-item <?php echo e(Request::routeIs('dashboard.analytics') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('dashboard.analytics')); ?>">
+                        <i class="fas fa-chart-line"></i>
+                        <p>Dashboard Analytics</p>
+                    </a>
+                </li>
+
+                <li class="nav-item <?php echo e(Request::routeIs('settingsmenu') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('settingsmenu')); ?>">
+                        <i class="fas fa-cog"></i>
+                        <p>Settings Menu</p>
+                    </a>
+                </li>
+
+                <li class="nav-item <?php echo e(Request::routeIs('admin.users.*') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('admin.users.index')); ?>">
+                        <i class="fas fa-users"></i>
+                        <p>User Management</p>
+                    </a>
+                </li>
+
+                <li
+                    class="nav-item <?php echo e(Request::routeIs('testimoni') || Request::routeIs('faq') || Request::routeIs('mitra') || Request::routeIs('kontak') || Request::routeIs('berita') || Request::routeIs('profile-kilau') || Request::routeIs('admin.donasi.*') ? 'active' : ''); ?> nav-category">
+                    <p>Ruang Kerja</p>
+                </li>
+
+                <li
+                    class="nav-item <?php echo e(Request::routeIs('profile-kilau') || Request::routeIs('profil.tentangkami') || Request::routeIs('profil.homekilau') || Request::routeIs('profil.iklankilau') || Request::routeIs('profil.struktur') || Request::routeIs('profil.sejarah') || Request::routeIs('profil.visimisi') || Request::routeIs('profil.pimpinan') || Request::routeIs('profil.iklandonasi') || Request::routeIs('profil.legalitaslembaga') ? 'active' : ''); ?> dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" id="navbarDropdownProfile" role="button"
+                        data-toggle="collapse" data-target="#profileKilauCollapse" aria-expanded="false"
+                        aria-controls="profileKilauCollapse">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Profile Kilau</p>
+                    </a>
+                    <div class="collapse <?php echo e(Request::routeIs('profil.tentangkami') || Request::routeIs('profil.homekilau') || Request::routeIs('profil.iklankilau') || Request::routeIs('profil.struktur') || Request::routeIs('profil.sejarah') || Request::routeIs('profil.visimisi') || Request::routeIs('profil.pimpinan') || Request::routeIs('profil.iklandonasi') || Request::routeIs('profil.legalitaslembaga') ? 'show' : ''); ?>"
+                        id="profileKilauCollapse">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="<?php echo e(route('profil.tentangkami')); ?>"
+                                    class="<?php echo e(Request::routeIs('profil.tentangkami') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('profil.tentangkami') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Tentang Kami</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo e(route('profil.legalitaslembaga')); ?>"
+                                    class="<?php echo e(Request::routeIs('profil.legalitaslembaga') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('profil.legalitaslembaga') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Legalitas Lembaga</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo e(route('profil.pimpinan')); ?>"
+                                    class="<?php echo e(Request::routeIs('profil.pimpinan') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('profil.pimpinan') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Pimpinan Kilau</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo e(route('profil.iklankilau')); ?>"
+                                    class="<?php echo e(Request::routeIs('profil.iklankilau') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('profil.iklankilau') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Iklan Page</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo e(route('profil.iklandonasi')); ?>"
+                                    class="<?php echo e(Request::routeIs('profil.iklandonasi') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('profil.iklandonasi') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Iklan Donasi</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo e(route('profil.homekilau')); ?>"
+                                    class="<?php echo e(Request::routeIs('profil.homekilau') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('profil.homekilau') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Home Kilau</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo e(route('profil.struktur')); ?>"
+                                    class="<?php echo e(Request::routeIs('profil.struktur') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('profil.struktur') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Struktur</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo e(route('profil.sejarah')); ?>"
+                                    class="<?php echo e(Request::routeIs('profil.sejarah') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('profil.sejarah') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Sejarah</span>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="<?php echo e(route('profil.visimisi')); ?>"
+                                    class="<?php echo e(Request::routeIs('profil.visimisi') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('profil.visimisi') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Visi dan Misi</span>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </li>
+
+                <li
+                    class="nav-item 
+                    <?php echo e(Request::routeIs('kontak') || Request::routeIs('colaborasi') ? 'active' : ''); ?> dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" id="navbarDropdownHubungiKami" role="button"
+                        data-toggle="collapse" data-target="#hubungiKamiCollapse" aria-expanded="false"
+                        aria-controls="hubungiKamiCollapse">
+                        <i class="fas fa-envelope"></i> <!-- Ikon untuk "Hubungi Kami" -->
+                        <p>Hubungi Kami</p>
+                    </a>
+                    <div class="collapse <?php echo e(Request::routeIs('kontak') || Request::routeIs('colaborasi') ? 'show' : ''); ?>"
+                        id="hubungiKamiCollapse">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="<?php echo e(route('kontak')); ?>"
+                                    class="<?php echo e(Request::routeIs('kontak') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('kontak') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Kontak</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo e(route('colaborasi')); ?>"
+                                    class="<?php echo e(Request::routeIs('colaborasi') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('colaborasi') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Kolaborasi</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                
+                <li class="nav-item dropdown <?php echo e(Request::routeIs('article') || Request::routeIs('getKategoriArticle') || Request::routeIs('admin.commentArticle.index') ? 'active' : ''); ?>">
+                    <a  href="#"
+                        class="nav-link dropdown-toggle"
+                        id="navbarDropdownArticleKilau"
+                        role="button"
+                        data-toggle="collapse"
+                        data-target="#articleKilauCollapse"
+                        aria-expanded="<?php echo e(Request::routeIs('article') || Request::routeIs('getKategoriArticle') || Request::routeIs('admin.commentArticle.index') ? 'true' : 'false'); ?>"
+                        aria-controls="articleKilauCollapse">
+                        <i class="fas fa-sticky-note"></i>   
+                        <p>Artikel Kilau</p>
+                    </a>
+
+                    <div id="articleKilauCollapse"
+                        class="collapse <?php echo e(Request::routeIs('article') || Request::routeIs('getKategoriArticle') || Request::routeIs('admin.commentArticle.index') ? 'show' : ''); ?>">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a  href="<?php echo e(route('article')); ?>"
+                                    class="<?php echo e(Request::routeIs('article') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('article') ? 'color:#1572E8;font-weight:bold;' : ''); ?>">
+                                    <span class="sub-item">Data Artikel</span>
+                                </a>
+                            </li>
+
+                        
+                            <li>
+                                <a href="<?php echo e(route('getKategoriArticle')); ?>"
+                                class="<?php echo e(Request::routeIs('getKategoriArticle') ? 'active' : ''); ?>"
+                                style="<?php echo e(Request::routeIs('getKategoriArticle') ? 'color:#1572E8;font-weight:bold;' : ''); ?>">
+                                    <span class="sub-item">Data Kategori Artikel</span>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="<?php echo e(route('admin.commentArticle.index')); ?>"
+                                class="<?php echo e(Request::routeIs('admin.commentArticle.index') ? 'active' : ''); ?>"
+                                style="<?php echo e(Request::routeIs('admin.commentArticle.index') ? 'color:#1572E8;font-weight:bold;' : ''); ?>">
+                                    <span class="sub-item">Data Komentar Artikel</span>
+                                </a>
+                            </li>
+                           
+                        </ul>
+                    </div>
+                </li>
+
+
+
+                <li
+                    class="nav-item 
+                <?php echo e(Request::routeIs('berita') || Request::routeIs('getKategoriBerita') || Request::routeIs('getKomentarBerita') ? 'active' : ''); ?> dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" id="navbarDropdownBeritaKilau" role="button"
+                        data-toggle="collapse" data-target="#beritaKilauCollapse" aria-expanded="false"
+                        aria-controls="beritaKilauCollapse">
+                        <i class="fas fa-newspaper"></i> <!-- Ikon untuk "Berita Kilau" -->
+                        <p>Berita Kilau</p>
+                    </a>
+                    <div class="collapse <?php echo e(Request::routeIs('berita') || Request::routeIs('getKategoriBerita') || Request::routeIs('getKomentarBerita') ? 'show' : ''); ?>"
+                        id="beritaKilauCollapse">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="<?php echo e(route('berita')); ?>"
+                                    class="<?php echo e(Request::routeIs('berita') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('berita') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Data Berita</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo e(route('getKategoriBerita')); ?>"
+                                    class="<?php echo e(Request::routeIs('getKategoriBerita') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('getKategoriBerita') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Data Kategori</span>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="<?php echo e(route('getKomentarBerita')); ?>"
+                                    class="<?php echo e(Request::routeIs('getKomentarBerita') ? 'active' : ''); ?>"
+                                    style="<?php echo e(Request::routeIs('getKomentarBerita') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Data Komentar</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+               <?php
+                    $isProgramRoute = Request::routeIs('program') || Request::routeIs('programReferrals');
+                ?>
+
+                <li class="nav-item dropdown <?php echo e($isProgramRoute ? 'active' : ''); ?>">
+                    <a href="#" class="nav-link dropdown-toggle"
+                    id="navbarDropdownProgramKilau"
+                    data-toggle="collapse"
+                    data-target="#programKilauCollapse"
+                    aria-expanded="<?php echo e($isProgramRoute ? 'true' : 'false'); ?>"
+                    aria-controls="programKilauCollapse">
+                        <i class="fas fa-project-diagram"></i> <!-- Ikon untuk "Program Kilau" -->
+                        <p>Program Kilau</p>
+                    </a>
+
+                    <div class="collapse <?php echo e($isProgramRoute ? 'show' : ''); ?>" id="programKilauCollapse">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="<?php echo e(route('program')); ?>"
+                                class="<?php echo e(Request::routeIs('program') ? 'active' : ''); ?>"
+                                style="<?php echo e(Request::routeIs('program') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Data Program</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo e(route('programReferrals')); ?>"
+                                class="<?php echo e(Request::routeIs('programReferrals') ? 'active' : ''); ?>"
+                                style="<?php echo e(Request::routeIs('programReferrals') ? 'color: #1572E8; font-weight: bold;' : ''); ?>">
+                                    <span class="sub-item">Data Referral Fundraiser</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+
+                
+
+                <li class="nav-item <?php echo e(Request::routeIs('admin.donasi.*') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('admin.donasi.index')); ?>">
+                        <i class="fas fa-hand-holding-heart"></i>
+                        <p>Donasi</p>
+                    </a>
+                </li>
+
+                <li class="nav-item <?php echo e(Request::routeIs('timeline') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('timeline')); ?>">
+                        <i class="fas fa-hourglass"></i>
+                        <p>Timeline Kilau</p>
+                    </a>
+                </li>
+
+                
+
+
+                <li class="nav-item <?php echo e(Request::routeIs('galeryAdmin') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('galeryAdmin')); ?>">
+                        <i class="fas fa-image"></i>
+                        <p>Galeri</p>
+                    </a>
+                </li>
+
+
+                <li class="nav-item <?php echo e(Request::routeIs('document') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('document')); ?>">
+                        <i class="fas fa-file-alt"></i>
+                        <p>Dokumen</p>
+                    </a>
+                </li>
+
+                <li class="nav-item <?php echo e(Request::routeIs('testimoni') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('testimoni')); ?>">
+                        <i class="fas fa-comments"></i>
+                        <p>Testimoni</p>
+                    </a>
+                </li>
+
+                <li class="nav-item <?php echo e(Request::routeIs('faq') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('faq')); ?>">
+                        <i class="fas fa-question-circle"></i>
+                        <p>FAQ</p>
+                    </a>
+                </li>
+
+                <li class="nav-item <?php echo e(Request::routeIs('mitra') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('mitra')); ?>">
+                        <i class="fas fa-handshake"></i>
+                        <p>Mitra Donatur</p>
+                    </a>
+                </li>
+
+                <!--<li class="nav-item <?php echo e(Request::routeIs('kontak') ? 'active' : ''); ?>">-->
+                <!--    <a href="<?php echo e(route('kontak')); ?>">-->
+                <!--        <i class="fas fa-fax"></i>-->
+                <!--        <p>Kontak</p>-->
+                <!--    </a>-->
+                <!--</li>          -->
+
+                
+
+                <!-- Kembali ke Dashboard -->
+                
+
+            </ul>
+        </div>
+    </div>
+</div>
+<!-- End Sidebar -->
+
+<!-- CSS -->
+<style>
+    .nav-category {
+        font-weight: bold;
+        color: #5c5c5c;
+        font-size: 16px;
+        padding: 10px 0;
+        text-transform: uppercase;
+        margin-top: 20px;
+        border-bottom: 2px solid #f0f0f0;
+        background-color: #fafafa;
+        padding-left: 15px;
+        font-family: 'Arial', sans-serif;
+    }
+
+    .nav-category p {
+        margin: 0;
+        padding: 0;
+    }
+
+    .nav-item {
+        position: relative;
+        padding-left: 10px;
+        margin-bottom: 10px;
+    }
+
+    .nav-item a {
+        font-size: 14px;
+        font-weight: 400;
+        color: #333;
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        transition: background-color 0.3s ease;
+    }
+</style>
+<?php /**PATH C:\Users\xxxxx\Documents\sso-kilau\kilauCms\resources\views\AdminPage\App\sidebard.blade.php ENDPATH**/ ?>

@@ -1,0 +1,387 @@
+<?php $__env->startSection('style'); ?>
+    <style>
+        #editor-container {
+            min-height: 150px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('content'); ?>
+    <div class="container">
+        <div class="page-inner">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center">
+                                <h4 class="card-title">Data Timeline</h4>
+                                <button class="btn btn-primary btn-round ms-auto" data-toggle="modal"
+                                    data-target="#createGaleriModal">
+                                    <i class="fa fa-plus"></i> Tambah Data
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="galeriadmin-table" class="display table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Judul Kegiatan</th>
+                                            <th>Nama Kantor Cabang</th>
+                                            <th>Deskripsi</th>
+                                            <th>Status</th>
+                                            <th>Foto Galeri</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php $__currentLoopData = $galeri; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <tr>
+                                                <td><?php echo e($loop->iteration); ?></td>
+                                                <td><?php echo e($item->judul_kegiatan); ?></td>
+                                                <td><?php echo e($item->nama_kantor_cabang); ?></td>
+                                                <td><?php echo e($item->deskripsi_kegiatan); ?></td>
+                                                <td>
+                                                    <span
+                                                        class="badge <?php echo e($item->status_galeri == 'Aktif' ? 'badge-success' : 'badge-danger'); ?>">
+                                                        <?php echo e($item->status_galeri); ?>
+
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <?php if($item->file_galeri): ?>
+                                                        <div class="form-group">
+                                                            <div>
+                                                                <?php $__currentLoopData = $item->file_galeri; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                    <img src="<?php echo e(asset('storage/' . $image)); ?>"
+                                                                        alt="Foto Program" width="100" height="auto"
+                                                                        style="margin-right: 10px;">
+                                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                            </div>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </td>
+
+                                                <td>
+                                                    <div class="btn-group gap-2" role="group">
+                                                        <!-- Tombol Edit -->
+                                                        <button class="btn btn-warning btn-sm rounded-circle p-2"
+                                                            data-toggle="modal"
+                                                            data-target="#editGaleriModal<?php echo e($item->id); ?>"
+                                                            title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+
+                                                        <!-- Tombol Delete -->
+                                                        <button class="btn btn-danger btn-sm rounded-circle p-2"
+                                                            data-toggle="modal"
+                                                            data-target="#deleteProgramModal<?php echo e($item->id); ?>"
+                                                            title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+
+                                                        <!-- Tombol Ubah Status -->
+                                                        <button class="btn btn-info btn-sm rounded-circle p-2"
+                                                            data-toggle="modal"
+                                                            data-target="#statusModal<?php echo e($item->id); ?>"
+                                                            title="Ubah Status">
+                                                            <i class="fas fa-exchange-alt"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+
+                                            <!-- Modal Edit Galeri -->
+                                            <div class="modal fade" id="editGaleriModal<?php echo e($item->id); ?>" tabindex="-1"
+                                                role="dialog" aria-labelledby="editGaleriModalLabel<?php echo e($item->id); ?>"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <form action="<?php echo e(route('galeryAdmin.edit', $item->id)); ?>"
+                                                            method="POST" enctype="multipart/form-data">
+                                                            <?php echo csrf_field(); ?>
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title"
+                                                                    id="editGaleriModalLabel<?php echo e($item->id); ?>">Edit
+                                                                    Galeri</h5>
+                                                                <button type="button" class="close" data-dismiss="modal"
+                                                                    aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <!-- Judul Kegiatan -->
+                                                                <div class="form-group">
+                                                                    <label>Judul Kegiatan</label>
+                                                                    <input type="text" name="judul_kegiatan"
+                                                                        class="form-control"
+                                                                        value="<?php echo e($item->judul_kegiatan); ?>" required>
+                                                                </div>
+                                                                <!-- Deskripsi Kegiatan -->
+                                                                <div class="form-group">
+                                                                    <label>Deskripsi Kegiatan</label>
+                                                                    <textarea name="deskripsi_kegiatan" class="form-control" required><?php echo e($item->deskripsi_kegiatan); ?></textarea>
+                                                                </div>
+                                                                <!-- Nama Kantor Cabang -->
+                                                                <div class="form-group">
+                                                                    <label>Nama Kantor Cabang</label>
+                                                                    <select name="nama_kantor_cabang" class="form-control"
+                                                                        required>
+                                                                        <option
+                                                                            value="<?php echo e(\App\Models\Galeri::KANTOR_CABANG_INDRAMAYU); ?>"
+                                                                            <?php echo e($item->nama_kantor_cabang == \App\Models\Galeri::KANTOR_CABANG_INDRAMAYU ? 'selected' : ''); ?>>
+                                                                            Kantor Cabang Indramayu
+                                                                        </option>
+                                                                        <option
+                                                                            value="<?php echo e(\App\Models\Galeri::KANTOR_CABANG_SUMEDANG); ?>"
+                                                                            <?php echo e($item->nama_kantor_cabang == \App\Models\Galeri::KANTOR_CABANG_SUMEDANG ? 'selected' : ''); ?>>
+                                                                            Kantor Cabang Sumedang
+                                                                        </option>
+                                                                        <option
+                                                                            value="<?php echo e(\App\Models\Galeri::KANTOR_CABANG_BANDUNG); ?>"
+                                                                            <?php echo e($item->nama_kantor_cabang == \App\Models\Galeri::KANTOR_CABANG_BANDUNG ? 'selected' : ''); ?>>
+                                                                            Kantor Cabang Bandung
+                                                                        </option>
+                                                                        <option
+                                                                            value="<?php echo e(\App\Models\Galeri::KANTOR_CABANG_MAJALENGKA); ?>"
+                                                                            <?php echo e($item->nama_kantor_cabang == \App\Models\Galeri::KANTOR_CABANG_MAJALENGKA ? 'selected' : ''); ?>>
+                                                                            Kantor Cabang Majalengka
+                                                                        </option>
+                                                                    </select>
+                                                                </div>
+                                                                <!-- Foto Galeri (Gambar Upload) -->
+                                                                <div class="form-group">
+                                                                    <label for="foto_image">Foto Program</label>
+                                                                    <small class="form-text text-muted">
+                                                                        <i class="fas fa-info-circle"></i> 
+                                                                        Gambar yang sudah ada tidak akan hilang. Gambar baru akan ditambahkan.
+                                                                    </small>
+                                                                    <input type="file" name="file_galeri[]"
+                                                                        class="form-control" id="foto_image" multiple>
+
+                                                                    <!-- Preview Foto Program yang sudah ada -->
+                                                                    <?php if($item->file_galeri): ?>
+                                                                        <div class="form-group mt-2">
+                                                                            <label><small>Gambar yang sudah ada (centang untuk hapus):</small></label>
+                                                                            <div id="imagePreview">
+                                                                                <?php $__currentLoopData = $item->file_galeri; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                                    <div style="position: relative; display: inline-block; margin-right: 10px; margin-bottom: 10px;">
+                                                                                        <img src="<?php echo e(asset('storage/' . $image)); ?>"
+                                                                                            alt="Foto Program" width="100"
+                                                                                            height="auto">
+                                                                                        <div style="position: absolute; top: -5px; right: -5px; background: rgba(255,255,255,0.9); padding: 2px; border-radius: 3px;">
+                                                                                            <input type="checkbox" name="delete_images[]" value="<?php echo e($image); ?>" title="Hapus gambar ini">
+                                                                                        </div>
+                                                                                    </div>
+                                                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                                            </div>
+                                                                            <small class="form-text text-muted">
+                                                                                <i class="fas fa-info-circle"></i> 
+                                                                                Centang gambar yang ingin dihapus, lalu klik "Simpan Perubahan"
+                                                                            </small>
+                                                                        </div>
+                                                                    <?php endif; ?>
+
+                                                                    <!-- Preview gambar baru yang dipilih -->
+                                                                    <div id="newImagePreview" class="mt-2">
+                                                                        <!-- Preview images will be shown here -->
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-dismiss="modal">Tutup</button>
+                                                                <button type="submit" class="btn btn-primary">Simpan
+                                                                    Perubahan</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- Modal Delete Galeri -->
+                                            <div class="modal fade" id="deleteProgramModal<?php echo e($item->id); ?>"
+                                                tabindex="-1" role="dialog"
+                                                aria-labelledby="deleteProgramModalLabel<?php echo e($item->id); ?>"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <form action="<?php echo e(route('galeryAdmin.delete', $item->id)); ?>"
+                                                            method="POST">
+                                                            <?php echo csrf_field(); ?>
+                                                            <?php echo method_field('DELETE'); ?>
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title"
+                                                                    id="deleteProgramModalLabel<?php echo e($item->id); ?>">Hapus
+                                                                    Galeri</h5>
+                                                                <button type="button" class="close"
+                                                                    data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                Apakah Anda yakin ingin menghapus galeri ini?
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-dismiss="modal">Tutup</button>
+                                                                <button type="submit"
+                                                                    class="btn btn-danger">Hapus</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Modal Toggle Status -->
+                                            <div class="modal fade" id="statusModal<?php echo e($item->id); ?>" tabindex="-1"
+                                                role="dialog" aria-labelledby="statusModalLabel<?php echo e($item->id); ?>"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <form action="<?php echo e(route('galeryAdmin.toggleStatus', $item->id)); ?>"
+                                                            method="POST">
+                                                            <?php echo csrf_field(); ?>
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title"
+                                                                    id="statusModalLabel<?php echo e($item->id); ?>">Ubah Status
+                                                                    Galeri</h5>
+                                                                <button type="button" class="close"
+                                                                    data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p>Pilih status untuk galeri:
+                                                                    <strong><?php echo e($item->judul_kegiatan); ?></strong>.</p>
+                                                                <div class="form-group">
+                                                                    <label>Status</label>
+                                                                    <select name="status_galeri" class="form-control">
+                                                                        <option value="1"
+                                                                            <?php echo e($item->status_galeri == 1 ? 'selected' : ''); ?>>
+                                                                            Aktif</option>
+                                                                        <option value="2"
+                                                                            <?php echo e($item->status_galeri == 2 ? 'selected' : ''); ?>>
+                                                                            Tidak Aktif</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-dismiss="modal">Tutup</button>
+                                                                <button type="submit" class="btn btn-primary">Simpan
+                                                                    Perubahan</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Galeri -->
+    <div class="modal fade" id="createGaleriModal" tabindex="-1" role="dialog"
+        aria-labelledby="createGaleriModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form action="<?php echo e(route('galeryAdmin.create')); ?>" method="POST" enctype="multipart/form-data">
+                <?php echo csrf_field(); ?>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createGaleriModalLabel">Tambah Galeri</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="judul_kegiatan">Judul Kegiatan</label>
+                            <input type="text" class="form-control" name="judul_kegiatan" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="deskripsi_kegiatan">Deskripsi Kegiatan</label>
+                            <textarea class="form-control" name="deskripsi_kegiatan" rows="4" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="nama_kantor_cabang">Nama Kantor Cabang</label>
+                            <select class="form-control" name="nama_kantor_cabang" required>
+                                <option value="<?php echo e(\App\Models\Galeri::KANTOR_CABANG_INDRAMAYU); ?>">
+                                    <?php echo e(\App\Models\Galeri::KANTOR_CABANG_INDRAMAYU); ?>
+
+                                </option>
+                                <option value="<?php echo e(\App\Models\Galeri::KANTOR_CABANG_SUMEDANG); ?>">
+                                    <?php echo e(\App\Models\Galeri::KANTOR_CABANG_SUMEDANG); ?>
+
+                                </option>
+                                <option value="<?php echo e(\App\Models\Galeri::KANTOR_CABANG_BANDUNG); ?>">
+                                    <?php echo e(\App\Models\Galeri::KANTOR_CABANG_BANDUNG); ?>
+
+                                </option>
+                                <option value="<?php echo e(\App\Models\Galeri::KANTOR_CABANG_MAJALENGKA); ?>">
+                                    <?php echo e(\App\Models\Galeri::KANTOR_CABANG_MAJALENGKA); ?>
+
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="file_galeri">Upload Gambar</label>
+                            <input type="file" class="form-control" name="file_galeri[]" id="foto_image" multiple>
+                            <div id="imagePreview" class="mt-2">
+                                <!-- Preview images will be shown here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('scripts'); ?>
+    <script>
+        $(document).ready(function() {
+            $('#galeriadmin-table').DataTable();
+
+            // Menampilkan preview gambar saat file dipilih
+            $('#foto_image').on('change', function() {
+                var files = this.files;
+                
+                // Clear previous new image previews
+                $('#newImagePreview').html('');
+                
+                // Add label for new images if files are selected
+                if (files.length > 0) {
+                    $('#newImagePreview').append('<label><small>Gambar baru yang akan ditambahkan:</small></label><br>');
+                }
+
+                // Loop untuk menampilkan setiap gambar yang dipilih
+                for (var i = 0; i < files.length; i++) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var imgPreview = '<img src="' + e.target.result +
+                            '" class="img-thumbnail" width="100" style="margin-right: 10px; border: 2px solid #007bff;">';
+                        $('#newImagePreview').append(imgPreview);
+                    };
+                    reader.readAsDataURL(files[i]);
+                }
+            });
+        });
+    </script>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('AdminPage.App.master', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\xxxxx\Documents\sso-kilau\kilauCms\resources\views\AdminPage\Galeri\index.blade.php ENDPATH**/ ?>
