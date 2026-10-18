@@ -929,163 +929,21 @@
     <script>
         $(function() {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const debounce = (fn, ms = 500) => {
-                let t;
-                return (...a) => {
-                    clearTimeout(t);
-                    t = setTimeout(() => fn.apply(this, a), ms);
-                };
-            };
 
             function cleanPhone(raw) {
                 return (raw || '').toString().replace(/\D+/g, '');
             }
 
-            // Fungsi untuk masking email sebelum ditampilkan di Swal
-            function maskEmail(value) {
-                const raw = (value || '').toString();
-                if (!raw) return raw;
-                const parts = raw.split('@');
-                if (parts.length < 2) return raw;
-                const domain = parts.slice(1).join('@');
-                const local = parts[0];
-                if (!domain) return raw;
-                if (local.length <= 2) {
-                    const firstChar = local.charAt(0) || '*';
-                    return firstChar + '*@' + domain;
-                }
-                return local.slice(0, 2) + '***@' + domain;
-            }
-
-            // Fungsi untuk masking nama pengguna sebelum ditampilkan di Swal
-            function maskName(value) {
-                const raw = (value || '').toString();
-                if (!raw) return raw;
-                if (raw.length <= 1) return raw + '*' + raw;
-                if (raw.length <= 4) return raw.charAt(0) + '*' + raw.slice(-1);
-                const middleMask = '*'.repeat(raw.length - 4);
-                return raw.slice(0, 2) + middleMask + raw.slice(-2);
-            }
-
-            // Fungsi untuk masking nomor HP sebelum ditampilkan di Swal
-            function maskPhone(value) {
-                const raw = (value || '').toString().trim();
-                if (!raw) return raw;
-                const digits = raw.replace(/[^0-9]/g, '');
-                if (!digits) return raw;
-                let maskedDigits;
-                if (digits.length === 1) {
-                    maskedDigits = '*';
-                } else if (digits.length === 2) {
-                    maskedDigits = digits.charAt(0) + '*';
-                } else if (digits.length === 3) {
-                    maskedDigits = digits.charAt(0) + '*' + digits.slice(-1);
-                } else {
-                    const firstCount = Math.min(3, digits.length - 2);
-                    const lastCount = Math.min(3, digits.length - firstCount - 1);
-                    const maskLen = Math.max(1, digits.length - firstCount - lastCount);
-                    const first = digits.slice(0, firstCount);
-                    const last = digits.slice(-lastCount);
-                    maskedDigits = first + '*'.repeat(maskLen) + last;
-                }
-                let result = '';
-                let index = 0;
-                for (const char of raw) {
-                    if (/\d/.test(char) && index < maskedDigits.length) {
-                        result += maskedDigits.charAt(index++);
-                    } else {
-                        result += char;
-                    }
-                }
-                if (index < maskedDigits.length) {
-                    result += maskedDigits.slice(index);
-                }
-                return result;
-            }
-
             function fillForm(d) {
                 if (d.nama && !$('#nama').val()) $('#nama').val(d.nama);
-                if (d.email && $('#email').val() !== d.email) $('#email').val(d.email);
-                if (d.no_hp && $('#no_hp').val() !== d.no_hp) $('#no_hp').val(d.no_hp);
+                if (d.email && !$('#email').val()) $('#email').val(d.email);
+                if (d.no_hp && !$('#no_hp').val()) $('#no_hp').val(d.no_hp);
             }
 
-            // ====== GUARD STATE ======
-            let isPromptOpen = false;
-            const handledKeys = new Set(); // kombinasi email+hp yang sudah diproses
-            let lookupXHR = null;
-
-            const keyOf = (email, hp) => `e:${(email||'').toLowerCase()}|p:${hp||''}`;
-
-            const doLookup = debounce(function() {
-                let email = ($('#email').val() || '').trim();
-                let no_hp = cleanPhone($('#no_hp').val());
-                if ($('#no_hp').val() !== no_hp) $('#no_hp').val(no_hp); // normalisasi hanya jika berubah
-
-                const canCheck = (email && emailRegex.test(email)) || (no_hp && no_hp.length >= 9);
-                if (!canCheck || isPromptOpen) return;
-
-                const key = keyOf(email, no_hp);
-                if (handledKeys.has(key)) return; // sudah ditangani sebelumnya
-
-                // Batalkan request sebelumnya bila ada
-                if (lookupXHR) {
-                    try {
-                        lookupXHR.abort();
-                    } catch (e) {}
-                    lookupXHR = null;
-                }
-
-                lookupXHR = $.ajax({
-                    url: "{{ route('donasi.cek-donatur') }}",
-                    method: "GET",
-                    data: {
-                        email: emailRegex.test(email) ? email : undefined,
-                        no_hp: (no_hp && no_hp.length >= 9) ? no_hp : undefined
-                    },
-                    complete: function() {
-                        lookupXHR = null;
-                    },
-                    success: function(res) {
-                        if (!res || !res.found || !res.data) return;
-
-                        const via = res.source === 'email' ? 'Email' : 'No HP';
-                        const namaAsli = (res.data.nama || '').trim();
-                        const emailAsli = (res.data.email || '').trim();
-                        const phoneAsli = (res.data.no_hp || '').trim();
-                        const nm = namaAsli || '(tanpa nama)';
-                        const em = emailAsli || '-';
-                        const hp = phoneAsli || '-';
-                        const maskedNm = namaAsli ? maskName(namaAsli) : nm;
-                        const maskedEm = emailAsli ? maskEmail(emailAsli) : em;
-                        const maskedHp = phoneAsli ? maskPhone(phoneAsli) : hp;
-
-                        isPromptOpen = true;
-                        const pesanSwal = via + ' sudah terdaftar atas nama <b>' + maskedNm + '</b><br>' +
-                            'Email: <b>' + maskedEm + '</b><br>' +
-                            'No HP: <b>' + maskedHp + '</b><br><br>' +
-                            'Apakah ingin memakai data ini untuk mengisi form?';
-                        Swal.fire({
-                            icon: 'question',
-                            title: 'Data donatur ditemukan',
-                            html: pesanSwal,
-                            showCancelButton: true,
-                            confirmButtonText: 'Pakai',
-                            cancelButtonText: 'Tidak'
-                        }).then((r) => {
-                            isPromptOpen = false;
-                            handledKeys.add(
-                            key); // tandai: jangan munculkan lagi untuk kombinasi ini
-                            if (r.isConfirmed) fillForm(res.data);
-                        });
-                    },
-                    error: function() {
-                        /* boleh diam */ }
+            $.get("{{ route('donasi.cek-donatur') }}")
+                .done(function(res) {
+                    if (res && res.found && res.data) fillForm(res.data);
                 });
-            }, 600);
-
-            // Hanya dengarkan 'input' untuk mengurangi duplikasi
-            $('#email').on('input', doLookup);
-            $('#no_hp').on('input', doLookup);
 
             // ===== Validasi sebelum submit (tetap seperti punyamu) =====
             $('#donasiForm').on('submit', function(e) {
@@ -1537,10 +1395,25 @@
         $(document).ready(function() {
             let currentPage = 1;
             let perPage = 6; // Bisa disesuaikan jumlah berita per halaman
+            const beritaApiUrl = 'https://berbagipendidikan.org';
+            const fallbackBeritaImage =
+                'https://placehold.jp/150x150.png';
+
+            function resolveBeritaImage(imageUrl) {
+                if (!imageUrl) {
+                    return fallbackBeritaImage;
+                }
+
+                try {
+                    return new URL(imageUrl, `${beritaApiUrl}/`).href;
+                } catch (error) {
+                    return fallbackBeritaImage;
+                }
+            }
 
             function loadBerita(page = 1) {
                 $.ajax({
-                    url: `https://berbagipendidikan.org/api/berita?page=${page}&per_page=${perPage}`,
+                    url: `${beritaApiUrl}/api/berita?page=${page}&per_page=${perPage}`,
                     type: "GET",
                     dataType: "json",
                     success: function(response) {
@@ -1552,13 +1425,9 @@
                                 if (berita.status_berita === "Tidak Aktif") {
                                     return;
                                 }
-                                let fotoUtama = berita.foto ?
-                                    `https://berbagipendidikan.org${berita.foto}` :
-                                    "assets/img/no-image.jpg";
-                                let foto2 = berita.foto2 ?
-                                    `https://berbagipendidikan.org${berita.foto2}` : fotoUtama;
-                                let foto3 = berita.foto3 ?
-                                    `https://berbagipendidikan.org${berita.foto3}` : fotoUtama;
+                                let fotoUtama = resolveBeritaImage(berita.foto);
+                                let foto2 = berita.foto2 ? resolveBeritaImage(berita.foto2) : fotoUtama;
+                                let foto3 = berita.foto3 ? resolveBeritaImage(berita.foto3) : fotoUtama;
                                 let beritaDetailUrl =
                                     `/berita/${berita.judul.replace(/\s+/g, '-')}`; // Ganti spasi dengan tanda hubung
 
@@ -1570,21 +1439,24 @@
                                             <div id="carouselBerita${berita.id}" class="carousel slide" data-bs-ride="carousel">
                                             <div class="carousel-inner">
                                                 <div class="carousel-item active">
-                                                <img src="${fotoUtama}" alt="Foto Berita" class="d-block w-100" 
-                                                    style="object-fit: cover; height: 250px; 
-                                                        border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem; 
+                                                <img src="${fotoUtama}" alt="Foto Berita" class="d-block w-100"
+                                                    onerror="this.onerror=null; this.src='${fallbackBeritaImage}';"
+                                                    style="object-fit: cover; height: 250px;
+                                                        border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem;
                                                         border-bottom-left-radius: 0; border-bottom-right-radius: 0;">
                                                 </div>
                                                 <div class="carousel-item">
-                                                <img src="${foto2}" alt="Foto Berita" class="d-block w-100" 
-                                                    style="object-fit: cover; height: 250px; 
-                                                        border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem; 
+                                                <img src="${foto2}" alt="Foto Berita" class="d-block w-100"
+                                                    onerror="this.onerror=null; this.src='${fallbackBeritaImage}';"
+                                                    style="object-fit: cover; height: 250px;
+                                                        border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem;
                                                         border-bottom-left-radius: 0; border-bottom-right-radius: 0;">
                                                 </div>
                                                 <div class="carousel-item">
-                                                <img src="${foto3}" alt="Foto Berita" class="d-block w-100" 
-                                                    style="object-fit: cover; height: 250px; 
-                                                        border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem; 
+                                                <img src="${foto3}" alt="Foto Berita" class="d-block w-100"
+                                                    onerror="this.onerror=null; this.src='${fallbackBeritaImage}';"
+                                                    style="object-fit: cover; height: 250px;
+                                                        border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem;
                                                         border-bottom-left-radius: 0; border-bottom-right-radius: 0;">
                                                 </div>
                                             </div>

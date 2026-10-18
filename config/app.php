@@ -139,10 +139,8 @@ return [
     */
 
     'maintenance' => [
-        'driver' => env('SESSION_DRIVER', 'file'),
-        'lifetime' => 120, // Set session lifetime
-        'expire_on_close' => false,
-        'encrypt' => true,
+        'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
+        'store' => env('APP_MAINTENANCE_STORE'),
     ],
 
     /*

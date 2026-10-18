@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\CmsGuestDonor;
 use App\Models\DonasiKilau;
 use App\Models\User;
 use App\Services\Auth\LocalAuthUserService;
 use App\Services\DonationIdentityService;
-use App\Models\IntegrationOutboxMessage;
 use App\Services\ReferralCodeService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -185,6 +185,65 @@ class DonationIdentityStageTest extends TestCase
             'external_user_id' => $globalUserId,
         ]);
         $this->assertDatabaseCount('cms_guest_donors', 0);
+    }
+
+    public function test_public_autofill_does_not_lookup_arbitrary_personal_data(): void
+    {
+        DonasiKilau::query()->create([
+            'nama' => 'Data Donatur Lama',
+            'type_donasi' => DonasiKilau::TYPE_DONASI_UMUM,
+            'total_donasi' => 100000,
+            'status_donasi' => DonasiKilau::DONASI_PENDING,
+            'email' => 'target@example.test',
+            'no_hp' => '0800000000',
+        ]);
+
+        $this->getJson('/donasi/cek-donatur?email=target@example.test&no_hp=0800000000')
+            ->assertOk()
+            ->assertExactJson(['found' => false]);
+    }
+
+    public function test_guest_autofill_only_uses_profile_from_own_cookie(): void
+    {
+        $guest = CmsGuestDonor::query()->create([
+            'id' => (string) Str::uuid(),
+            'name' => 'Guest Tersimpan',
+            'email' => 'guest@example.test',
+            'no_hp' => '081234567890',
+            'profile_version' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->withCredentials()
+            ->withCookie(DonationIdentityService::COOKIE_NAME, $guest->id)
+            ->getJson('/donasi/cek-donatur?email=target@example.test')
+            ->assertOk()
+            ->assertJsonPath('found', true)
+            ->assertJsonPath('source', DonasiKilau::DONOR_SOURCE_KILAU_CMS)
+            ->assertJsonPath('data.nama', 'Guest Tersimpan')
+            ->assertJsonPath('data.email', 'guest@example.test')
+            ->assertJsonPath('data.no_hp', '081234567890');
+    }
+
+    public function test_authenticated_autofill_uses_kilau_auth_profile(): void
+    {
+        $user = $this->createUser((string) Str::uuid());
+
+        $this->actingAs($user)
+            ->withSession([
+                'auth_service_user' => [
+                    'name' => 'Profil KilauAuth',
+                    'email' => 'auth-profile@example.test',
+                    'phone' => '089999999999',
+                ],
+            ])
+            ->getJson('/donasi/cek-donatur')
+            ->assertOk()
+            ->assertJsonPath('found', true)
+            ->assertJsonPath('source', DonasiKilau::DONOR_SOURCE_KILAU_AUTH)
+            ->assertJsonPath('data.nama', 'Profil KilauAuth')
+            ->assertJsonPath('data.email', 'auth-profile@example.test')
+            ->assertJsonPath('data.no_hp', '089999999999');
     }
 
     public function test_guest_profile_can_clear_contacts_and_be_anonymized(): void

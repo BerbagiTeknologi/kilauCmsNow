@@ -133,37 +133,45 @@
 
                 <h2 class="text-center mt-5" style="font-weight:500;">Sign Up</h2>
 
-                @if ($errors->any())
+                @if ($errors->has('auth'))
                     <div class="alert alert-danger">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
+                        {{ $errors->first('auth') }}
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('register.store') }}">
+                <form id="register-form" method="POST" action="{{ route('register.store') }}">
                     @csrf
                     <div class="form-group">
                         <label for="name">Nama</label>
-                        <input type="text" class="form-control" id="name" name="name"
-                            value="{{ old('name') }}" placeholder="Masukkan Nama" required autofocus>
+                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name"
+                            value="{{ old('name') }}" placeholder="Masukkan Nama" maxlength="255" required autofocus>
+                        @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" name="email"
-                            value="{{ old('email') }}" placeholder="Masukkan Alamat Email" required>
+                        <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email"
+                            value="{{ old('email') }}" placeholder="Masukkan Alamat Email" maxlength="255" required>
+                        @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" class="form-control" id="password" name="password"
-                            placeholder="Minimal 8 karakter" required>
+                        <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password"
+                            placeholder="Minimal 8 karakter" minlength="8" required>
+                        @error('password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="password_confirmation">Konfirmasi Password</label>
-                        <input type="password" class="form-control" id="password_confirmation"
+                        <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" id="password_confirmation"
                             name="password_confirmation" placeholder="Ulangi Password" required>
+                        @error('password_confirmation')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="d-grid gap-3">
                         <button type="submit" class="btn" style="background-color: #1363c6; color:white;">
@@ -181,4 +189,42 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('register-form');
+            const password = document.getElementById('password');
+            const confirmation = document.getElementById('password_confirmation');
+            const requiredMessages = {
+                name: 'Nama wajib diisi.',
+                email: 'Email wajib diisi.',
+                password: 'Password wajib diisi.',
+                password_confirmation: 'Konfirmasi password wajib diisi.'
+            };
+
+            const validateConfirmation = function () {
+                confirmation.setCustomValidity(
+                    confirmation.value && confirmation.value !== password.value
+                        ? 'Konfirmasi password tidak cocok.'
+                        : ''
+                );
+            };
+
+            form.addEventListener('invalid', function (event) {
+                if (event.target.validity.valueMissing) {
+                    event.target.setCustomValidity(requiredMessages[event.target.name]);
+                } else if (event.target.validity.typeMismatch) {
+                    event.target.setCustomValidity('Format email tidak valid.');
+                } else if (event.target.validity.tooShort) {
+                    event.target.setCustomValidity('Password minimal 8 karakter.');
+                }
+            }, true);
+            form.addEventListener('input', function (event) {
+                event.target.setCustomValidity('');
+                validateConfirmation();
+            });
+        });
+    </script>
 @endsection

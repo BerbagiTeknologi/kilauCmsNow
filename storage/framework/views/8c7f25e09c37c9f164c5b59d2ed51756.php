@@ -389,7 +389,7 @@
 </div>
 
 
-<?php echo $__env->make('LandingPageKilau.Components.donasi-modal', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+<?php echo $__env->make('LandingPageKilau.Components.donasi-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -492,40 +492,21 @@
     //     }
     // }
     
-    async function shareProgram(programId) {
-        let originalUrl = `https://home.kilauindonesia.org/?modal=${programId}`;
-        
-        try {
-            // Kirim permintaan ke TinyURL API
-            let response = await fetch(`https://api.tinyurl.com/create`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer YOUR_TINYURL_API_KEY',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    url: originalUrl
-                })
-            });
-    
-            let data = await response.json();
-            let shortUrl = data.data.tiny_url || originalUrl; // Gunakan shortlink jika tersedia
-    
-            if (navigator.share) {
-                navigator.share({
-                    title: "Lihat Program Ini!",
-                    text: "Yuk, lihat program ini di Kilau Indonesia!",
-                    url: shortUrl
-                }).then(() => console.log('Berhasil dibagikan'))
-                  .catch((error) => console.log('Gagal berbagi:', error));
-            } else {
-                let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent("Yuk, lihat program ini di Kilau Indonesia! " + shortUrl)}`;
-                window.open(whatsappUrl, '_blank');
-            }
-    
-        } catch (error) {
-            console.error("Error generating short URL:", error);
+    function shareProgram(programId) {
+        const shareUrl = `${window.location.origin}/?modal=${encodeURIComponent(programId)}`;
+        const shareData = {
+            title: 'Lihat Program Ini!',
+            text: 'Yuk, lihat program ini di Kilau Indonesia!',
+            url: shareUrl
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData).catch(() => {});
+            return;
         }
+
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareData.text} ${shareUrl}`)}`;
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     }
 
     

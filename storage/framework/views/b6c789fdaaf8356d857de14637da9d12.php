@@ -123,6 +123,14 @@
                     </a>
                     <ul class="dropdown-menu dropdown-user animated fadeIn">
                         <div class="dropdown-user-scroll scrollbar-outer">
+                            <?php if(auth()->user()?->role === 'admin'): ?>
+                                <li>
+                                    <a class="dropdown-item" href="<?php echo e(route('home')); ?>">
+                                        <i class="fas fa-home me-2"></i> Home CMS
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                            <?php endif; ?>
                             <li>
                                 <form action="<?php echo e(route('logout')); ?>" method="POST">
                                     <?php echo csrf_field(); ?>

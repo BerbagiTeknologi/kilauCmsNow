@@ -34,6 +34,10 @@
             height: auto;
         }
 
+        #createBeritaModal .ql-container.is-invalid {
+            border-color: #dc3545;
+        }
+
         /* Style untuk masing-masing tag input (bisa disesuaikan agar mirip tombol kecil) */
         .edit-tag-input {
             display: inline-block;
@@ -116,8 +120,8 @@
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
-                            <label>Judul</label> 
-                            <input type="text" name="judul" id="judul-input" class="form-control" required>
+                            <label>Judul <span class="text-danger">*</span></label>
+                            <input type="text" name="judul" id="judul-input" class="form-control" maxlength="255" required>
                             <small id="seo-title-analysis" class="form-text text-muted"></small>
                         </div>
                         <div class="form-group">
@@ -126,35 +130,38 @@
                                     id="author-input"  
                                     name="author"                
                                     class="form-control"
+                                    maxlength="255"
                                     placeholder="Nama penulis (opsional)">
                             <small class="form-text text-muted">
                                 Kosongkan jika tidak ingin menampilkan nama penulis.
                             </small>
                         </div>
                         <div class="form-group">
-                            <label>Konten</label>
+                            <label>Konten <span class="text-danger">*</span></label>
                             <textarea name="konten" id="konten-create" class="form-control ckeditor" rows="5" style="display: none;"></textarea>
                             <small id="seo-content-analysis" class="form-text text-muted"></small>
                         </div>
                         <div class="form-group">
-                            <label>Tanggal</label>
+                            <label>Tanggal <span class="text-danger">*</span></label>
                             <input type="date" name="tanggal" class="form-control" required>
                         </div>
                         <div class="form-group">
-                            <label>Kategori Berita</label>
+                            <label>Kategori Berita <span class="text-danger">*</span></label>
                             <select name="id_kategori_berita" id="id_kategori_berita" class="form-control" required>
                                 <option value="">Pilih Kategori</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Tags (Bisa lebih dari satu)</label>
+                            <label>Tags <span class="text-muted">(opsional, bisa lebih dari satu)</span></label>
                             <div id="tags-container">
                                 <div class="row tag-item mb-2">
                                     <div class="col-md-6">
-                                        <input type="text" name="tags[0][nama]" class="form-control" placeholder="Nama Tag">
+                                        <input type="text" name="tags[0][nama]" class="form-control" maxlength="255"
+                                            placeholder="Nama tag">
                                     </div>
-                                    <div class="col-md-6">
-                                        <input type="text" name="tags[0][link]" class="form-control" placeholder="Link Tag">
+                                    <div class="col-md-5">
+                                        <input type="url" name="tags[0][link]" class="form-control"
+                                            placeholder="https://example.com">
                                     </div>
                                     <div class="col-md-1">
                                         <!-- Tombol hapus tag, disembunyikan untuk input pertama -->
@@ -162,19 +169,23 @@
                                     </div>
                                 </div>
                             </div>
+                            <small class="form-text text-muted">Kosongkan nama dan link jika tidak ingin menambahkan tag.</small>
                             <button type="button" id="add-tag-btn" class="btn btn-secondary btn-sm">Tambah Tag</button>
                         </div>
                         <div class="form-group">
                             <label>Foto 1</label>
-                            <input type="file" name="foto" class="form-control">
+                            <input type="file" name="foto" class="form-control" accept=".jpg,.jpeg,.png">
+                            <small class="form-text text-muted">Format JPG, JPEG, atau PNG. Maksimal 2 MB.</small>
                         </div>
                         <div class="form-group">
                             <label>Foto 2</label>
-                            <input type="file" name="foto2" class="form-control">
+                            <input type="file" name="foto2" class="form-control" accept=".jpg,.jpeg,.png">
+                            <small class="form-text text-muted">Format JPG, JPEG, atau PNG. Maksimal 2 MB.</small>
                         </div>
                         <div class="form-group">
                             <label>Foto 3</label>
-                            <input type="file" name="foto3" class="form-control">
+                            <input type="file" name="foto3" class="form-control" accept=".jpg,.jpeg,.png">
+                            <small class="form-text text-muted">Format JPG, JPEG, atau PNG. Maksimal 2 MB.</small>
                         </div>      
                     </div>
 
@@ -320,18 +331,6 @@
                         }
                     });
 
-                    // Update hidden textarea dengan konten dari Quill saat form dikirim
-                    $('#' + editorId).closest('form').on('submit', function(e) {
-                        let konten = window[editorId].root.innerHTML.trim();
-
-                        if (konten === '<p><br></p>' || konten === '') {
-                            Swal.fire("Peringatan", "Konten berita tidak boleh kosong!", "warning");
-                            e.preventDefault();
-                            return false;
-                        }
-
-                        $('#' + editorId).val(konten);
-                    });
                 });
             }
 
@@ -577,39 +576,140 @@
                 $('#author-input').val(author);
             });
 
-            // Handle Form Submit (AJAX) untuk menambahkan berita
+            function clearCreateValidationErrors() {
+                const form = $('#create-berita-form');
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.create-validation-error').remove();
+            }
+
+            function createInputName(field) {
+                return field.split('.').reduce(function(name, segment, index) {
+                    return index === 0 ? segment : `${name}[${segment}]`;
+                }, '');
+            }
+
+            function showCreateValidationErrors(errors) {
+                let firstMessage = 'Periksa kembali isian form.';
+                let firstField = null;
+
+                $.each(errors, function(field, messages) {
+                    const message = Array.isArray(messages) ? messages[0] : messages;
+                    const inputName = createInputName(field);
+                    let fieldElement = $('#create-berita-form [name]').filter(function() {
+                        return this.name === inputName;
+                    }).first();
+
+                    if (field === 'konten') {
+                        fieldElement = $('#konten-create-editor');
+                    } else if (!fieldElement.length && field === 'tags') {
+                        fieldElement = $('#tags-container');
+                    }
+
+                    if (!firstField && fieldElement.length) {
+                        firstField = fieldElement;
+                        firstMessage = message;
+                    }
+
+                    if (fieldElement.length) {
+                        fieldElement.addClass('is-invalid');
+                        $('<div class="invalid-feedback d-block create-validation-error"></div>')
+                            .text(message)
+                            .insertAfter(fieldElement);
+                    }
+                });
+
+                if (firstField) {
+                    if (firstField.attr('id') === 'konten-create-editor' && window['konten-create']) {
+                        window['konten-create'].focus();
+                    } else {
+                        firstField.trigger('focus');
+                    }
+                }
+
+                return firstMessage;
+            }
+
+            function removeEmptyTags(formData) {
+                const tagIndexes = new Set();
+
+                for (const key of formData.keys()) {
+                    const match = key.match(/^tags\[(\d+)\]\[(nama|link)\]$/);
+                    if (match) {
+                        tagIndexes.add(match[1]);
+                    }
+                }
+
+                tagIndexes.forEach(function(index) {
+                    const nameKey = `tags[${index}][nama]`;
+                    const linkKey = `tags[${index}][link]`;
+                    const name = String(formData.get(nameKey) || '').trim();
+                    const link = String(formData.get(linkKey) || '').trim();
+
+                    if (!name && !link) {
+                        formData.delete(nameKey);
+                        formData.delete(linkKey);
+                        return;
+                    }
+
+                    formData.set(nameKey, name);
+                    formData.set(linkKey, link);
+                });
+            }
+
             $('#create-berita-form').on('submit', function(e) {
                 e.preventDefault();
-                let formData = new FormData(this);
+                clearCreateValidationErrors();
+
+                const form = this;
+                const editor = window['konten-create'];
+                const konten = editor ? editor.root.innerHTML.trim() : '';
+
+                if (konten === '<p><br></p>' || konten === '') {
+                    const message = showCreateValidationErrors({
+                        konten: ['Konten wajib diisi.']
+                    });
+                    Swal.fire('Validasi gagal', message, 'warning');
+                    return;
+                }
+
+                $('#konten-create').val(konten);
+
+                const formData = new FormData(form);
+                removeEmptyTags(formData);
+
+                const submitButton = $(form).find('button[type="submit"]');
+                const submitText = submitButton.text();
+                submitButton.prop('disabled', true).text('Menyimpan...');
 
                 $.ajax({
                     url: 'https://berbagipendidikan.org/api/berita-create',
                     type: 'POST',
                     data: formData,
+                    headers: {
+                        Accept: 'application/json'
+                    },
                     contentType: false,
                     processData: false,
-                    success: function(response) {
+                    success: function() {
                         Swal.fire("Sukses!", "Berita berhasil ditambahkan.", "success");
                         $('#createBeritaModal').modal('hide');
+                        form.reset();
+                        editor.setContents([]);
+                        $('#tags-container .tag-item:not(:first)').remove();
+                        tagIndex = 1;
                         loadBerita();
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
-                            let res = xhr.responseJSON;
-                            let errors = res.errors;
-
-                            // Tampilkan error validasi khusus
-                            if (errors.judul) {
-                                Swal.fire("Gagal!", errors.judul[0], "error");
-                            } else {
-                                Swal.fire("Gagal!", "Validasi gagal. Periksa isian Anda.", "warning");
-                            }
-
-                            // Bisa juga tampilkan kesalahan untuk semua field lain jika mau
-                            // Contoh: console.log(errors);
+                            const errors = xhr.responseJSON?.errors || {};
+                            const message = showCreateValidationErrors(errors);
+                            Swal.fire('Validasi gagal', message, 'warning');
                         } else {
                             Swal.fire("Gagal!", "Terjadi kesalahan saat menambah berita.", "error");
                         }
+                    },
+                    complete: function() {
+                        submitButton.prop('disabled', false).text(submitText);
                     }
                 });
             });
@@ -652,38 +752,35 @@
                 loadBerita(1, searchValue);
             });
 
-            $(document).ready(function() {
-                // Inisialisasi counter untuk tags, mulai dari 1 karena index ke-0 sudah ada
-                let tagIndex = 1;
+            let tagIndex = 1;
 
-                // Event handler untuk tombol Tambah Tag
-                $('#add-tag-btn').on('click', function() {
-                    // Buat HTML baru untuk tag input
-                    let newTagHtml = `
-                        <div class="row tag-item mb-2">
-                            <div class="col-md-6">
-                                <input type="text" name="tags[${tagIndex}][nama]" class="form-control" placeholder="Nama Tag">
-                            </div>
-                            <div class="col-md-5">
-                                <input type="text" name="tags[${tagIndex}][link]" class="form-control" placeholder="Link Tag">
-                            </div>
-                            <div class="col-md-1">
-                                <button type="button" class="btn btn-danger btn-sm remove-tag">&times;</button>
-                            </div>
+            $('#add-tag-btn').on('click', function() {
+                let newTagHtml = `
+                    <div class="row tag-item mb-2">
+                        <div class="col-md-6">
+                            <input type="text" name="tags[${tagIndex}][nama]" class="form-control"
+                                maxlength="255" placeholder="Nama tag">
                         </div>
-                    `;
-                    // Tambahkan HTML baru ke container tags
-                    $('#tags-container').append(newTagHtml);
-                    tagIndex++;
-                });
+                        <div class="col-md-5">
+                            <input type="url" name="tags[${tagIndex}][link]" class="form-control"
+                                placeholder="https://example.com">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-danger btn-sm remove-tag">&times;</button>
+                        </div>
+                    </div>
+                `;
+                $('#tags-container').append(newTagHtml);
+                tagIndex++;
+            });
 
-                // Event delegation untuk tombol hapus tag
-                $('#tags-container').on('click', '.remove-tag', function() {
-                    $(this).closest('.tag-item').remove();
-                });
+            $('#tags-container').on('click', '.remove-tag', function() {
+                $(this).closest('.tag-item').remove();
+            });
 
-                // Inisialisasi input lainnya (misalnya, inisialisasi dropdown, quill editor, dll.)
-                // ... kode yang sudah ada ...
+            $('#create-berita-form').on('input change', '[name]', function() {
+                $(this).removeClass('is-invalid');
+                $(this).next('.create-validation-error').remove();
             });
 
             // Event listener untuk pagination

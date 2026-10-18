@@ -292,54 +292,15 @@ class HomeController extends Controller
         return response()->json(['message' => 'Program tidak ditemukan'], 404);
     }
 
-    public function cekDonatur(Request $request)
+    public function cekDonatur(Request $request, DonationIdentityService $donationIdentityService)
     {
-        $request->validate([
-            'email' => 'nullable|email',
-            'no_hp' => 'nullable|string|max:20',
-        ]);
+        $profile = $donationIdentityService->autofillProfile($request);
 
-        if (!$request->filled('email') && !$request->filled('no_hp')) {
+        if (!$profile) {
             return response()->json(['found' => false]);
         }
 
-        // Prioritas: email dulu, lalu no_hp
-        if ($request->filled('email')) {
-            $byEmail = DonasiKilau::where('email', $request->email)
-                ->orderByDesc('created_at')
-                ->first();
-            if ($byEmail) {
-                return response()->json([
-                    'found'  => true,
-                    'source' => 'email',
-                    'data'   => [
-                        'nama'  => $byEmail->nama,
-                        'email' => $byEmail->email,
-                        'no_hp' => $byEmail->no_hp,
-                    ],
-                ]);
-            }
-        }
-
-        if ($request->filled('no_hp')) {
-            // Pastikan front-end mengirim no_hp yang sudah dibersihkan dari non-digit (lihat script)
-            $byPhone = DonasiKilau::where('no_hp', $request->no_hp)
-                ->orderByDesc('created_at')
-                ->first();
-            if ($byPhone) {
-                return response()->json([
-                    'found'  => true,
-                    'source' => 'no_hp',
-                    'data'   => [
-                        'nama'  => $byPhone->nama,
-                        'email' => $byPhone->email,
-                        'no_hp' => $byPhone->no_hp,
-                    ],
-                ]);
-            }
-        }
-
-        return response()->json(['found' => false]);
+        return response()->json(['found' => true] + $profile);
     }
 
     public function donasi(

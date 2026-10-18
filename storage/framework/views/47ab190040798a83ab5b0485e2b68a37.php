@@ -248,13 +248,17 @@
 
                 <h2 class="text-center mt-1" style="font-weight:500;">Sign In</h2>
 
-                <?php if($errors->any()): ?>
+                <?php if($errors->has('auth')): ?>
                     <div class="alert alert-danger">
-                        <ul>
-                            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <li><?php echo e($error); ?></li>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </ul>
+                        <?php echo e($errors->first('auth')); ?>
+
+                    </div>
+                <?php endif; ?>
+
+                <?php if($message = Session::get('warning')): ?>
+                    <div class="alert alert-warning">
+                        <?php echo e($message); ?>
+
                     </div>
                 <?php endif; ?>
 
@@ -270,13 +274,47 @@
                     <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" name="email"
+                        <input type="email" class="form-control <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="email" name="email"
                             value="<?php echo e(old('email')); ?>" placeholder="Masukkan Alamat Email" required autofocus>
+                        <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" class="form-control" id="password" name="password"
+                        <input type="password" class="form-control <?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="password" name="password"
                             placeholder="Masukkan Password" required>
+                        <?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="text-danger small mt-1"><?php echo e($message); ?></div>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" value="1" id="remember" name="remember">
@@ -306,6 +344,20 @@
 <?php $__env->startSection('scripts'); ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('login-form');
+            form.addEventListener('invalid', function (event) {
+                if (event.target.validity.valueMissing) {
+                    event.target.setCustomValidity(event.target.name === 'email'
+                        ? 'Email wajib diisi.'
+                        : 'Password wajib diisi.');
+                } else if (event.target.validity.typeMismatch) {
+                    event.target.setCustomValidity('Format email tidak valid.');
+                }
+            }, true);
+            form.addEventListener('input', function (event) {
+                event.target.setCustomValidity('');
+            });
+
             const pwd = document.getElementById('password');
             if (!pwd) return;
 
@@ -357,4 +409,4 @@
     </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('Auth.App.master', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\xxxxx\Documents\sso-kilau\kilauCms\resources\views/Auth/login.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('Auth.App.master', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\xxxxx\Documents\sso-kilau\kilauCms\resources\views/Auth/login.blade.php ENDPATH**/ ?>

@@ -3,6 +3,7 @@
 namespace App\Services\Auth;
 
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -15,27 +16,6 @@ class AuthServiceClient
         return (string) config('auth_service.internal_key') !== '';
     }
 
-    public function canUseInternalApi(): bool
-    {
-        $internalKey = (string) config('auth_service.internal_key');
-
-        if (!$this->hasInternalKey()) {
-            return false;
-        }
-
-        try {
-            $response = $this->request()
-                ->withHeader('X-Internal-Service-Key', $internalKey)
-                ->get($this->url('/api/internal/user-mappings/lookup'), [
-                    'global_user_id' => '00000000-0000-0000-0000-000000000000',
-                ]);
-        } catch (\Throwable) {
-            return false;
-        }
-
-        return $response->successful() || $response->status() === 404;
-    }
-
     public function register(
         string $name,
         string $email,
@@ -43,27 +23,50 @@ class AuthServiceClient
         string $passwordConfirmation,
         string $deviceName = 'kilauCms'
     ): array {
+        $internalKey = (string) config('auth_service.internal_key');
+
+        if ($internalKey === '') {
+            throw new AuthenticationException('Registrasi belum tersedia karena konfigurasi SSO belum lengkap. Hubungi admin.');
+        }
+
         try {
             $response = $this->request()
-                ->post($this->url('/api/register'), [
+                ->withHeader('X-Internal-Service-Key', $internalKey)
+                ->post($this->url('/api/internal/register'), [
                     'name' => $name,
                     'email' => $email,
                     'password' => $password,
                     'password_confirmation' => $passwordConfirmation,
                     'device_name' => $deviceName,
                 ]);
-        } catch (\Throwable) {
-            throw new AuthenticationException('Layanan auth sedang tidak tersedia.');
+        } catch (ConnectionException) {
+            throw new AuthenticationException('Tidak dapat terhubung ke layanan SSO. Coba lagi beberapa saat.');
         }
 
         if ($response->status() === 422) {
-            throw ValidationException::withMessages($response->json('errors') ?: [
-                'email' => [$response->json('message', 'Registrasi ditolak oleh layanan auth.')],
-            ]);
+            $emailErrors = $response->json('errors.email', []);
+
+            throw ValidationException::withMessages(
+                is_array($emailErrors) && in_array('The email has already been taken.', $emailErrors, true)
+                    ? ['email' => ['Email sudah terdaftar di SSO. Silakan login.']]
+                    : ['auth' => ['Data registrasi ditolak layanan SSO. Periksa kembali data Anda.']]
+            );
+        }
+
+        if (in_array($response->status(), [401, 403], true)) {
+            throw new AuthenticationException('Registrasi belum tersedia karena konfigurasi SSO bermasalah. Hubungi admin.');
+        }
+
+        if ($response->status() === 503 && $response->json('message') === 'Internal service key is not configured.') {
+            throw new AuthenticationException('Registrasi belum tersedia karena konfigurasi SSO bermasalah. Hubungi admin.');
+        }
+
+        if ($response->serverError()) {
+            throw new AuthenticationException('Layanan SSO sedang mengalami gangguan. Coba lagi beberapa saat.');
         }
 
         if ($response->failed()) {
-            throw new AuthenticationException($response->json('message', 'Registrasi ditolak oleh layanan auth.'));
+            throw new AuthenticationException('Registrasi ditolak layanan SSO. Hubungi admin jika masalah berlanjut.');
         }
 
         return $response->json('data', []);
@@ -78,18 +81,24 @@ class AuthServiceClient
                     'password' => $password,
                     'device_name' => $deviceName,
                 ]);
-        } catch (\Throwable) {
-            throw new AuthenticationException('Layanan auth sedang tidak tersedia.');
+        } catch (ConnectionException) {
+            throw new AuthenticationException('Tidak dapat terhubung ke layanan SSO. Coba lagi beberapa saat.');
         }
 
         if ($response->status() === 422) {
-            throw ValidationException::withMessages($response->json('errors') ?: [
-                'email' => [$response->json('message', 'Email atau password salah.')],
-            ]);
+            $message = $response->json('errors.email.0') === 'The user account is inactive.'
+                ? 'Akun tidak aktif. Hubungi admin.'
+                : 'Email atau password salah.';
+
+            throw ValidationException::withMessages(['email' => [$message]]);
+        }
+
+        if ($response->serverError()) {
+            throw new AuthenticationException('Layanan SSO sedang mengalami gangguan. Coba lagi beberapa saat.');
         }
 
         if ($response->failed()) {
-            throw new AuthenticationException($response->json('message', 'Login ditolak oleh layanan auth.'));
+            throw new AuthenticationException('Login ditolak layanan SSO. Hubungi admin jika masalah berlanjut.');
         }
 
         return $response->json('data', []);

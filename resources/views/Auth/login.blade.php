@@ -252,13 +252,15 @@
 
                 <h2 class="text-center mt-1" style="font-weight:500;">Sign In</h2>
 
-                @if ($errors->any())
+                @if ($errors->has('auth'))
                     <div class="alert alert-danger">
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
+                        {{ $errors->first('auth') }}
+                    </div>
+                @endif
+
+                @if ($message = Session::get('warning'))
+                    <div class="alert alert-warning">
+                        {{ $message }}
                     </div>
                 @endif
 
@@ -273,13 +275,19 @@
                     @csrf
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" name="email"
+                        <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email"
                             value="{{ old('email') }}" placeholder="Masukkan Alamat Email" required autofocus>
+                        @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" class="form-control" id="password" name="password"
+                        <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password"
                             placeholder="Masukkan Password" required>
+                        @error('password')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" value="1" id="remember" name="remember">
@@ -309,6 +317,20 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('login-form');
+            form.addEventListener('invalid', function (event) {
+                if (event.target.validity.valueMissing) {
+                    event.target.setCustomValidity(event.target.name === 'email'
+                        ? 'Email wajib diisi.'
+                        : 'Password wajib diisi.');
+                } else if (event.target.validity.typeMismatch) {
+                    event.target.setCustomValidity('Format email tidak valid.');
+                }
+            }, true);
+            form.addEventListener('input', function (event) {
+                event.target.setCustomValidity('');
+            });
+
             const pwd = document.getElementById('password');
             if (!pwd) return;
 

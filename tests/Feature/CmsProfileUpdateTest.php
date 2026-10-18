@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
@@ -22,7 +23,15 @@ class CmsProfileUpdateTest extends TestCase
             'app.maintenance.driver' => 'file',
             'auth_service.url' => 'https://kilau-auth.test',
             'auth_service.timeout' => 1,
+            'database.default' => 'mysql',
+            'database.connections.mysql' => [
+                'driver' => 'sqlite',
+                'database' => ':memory:',
+                'prefix' => '',
+                'foreign_key_constraints' => false,
+            ],
         ]);
+        DB::purge('mysql');
 
         Schema::create('users', function (Blueprint $table): void {
             $table->id();
@@ -80,6 +89,7 @@ class CmsProfileUpdateTest extends TestCase
         $this->assertSame($authProfile['name'], $user->name);
         $this->assertSame($authProfile['email'], $user->email);
         $this->assertSame($authProfile['phone'], $user->sso_payload['global_user']['phone']);
+        $this->assertSame(2, $user->sso_payload['global_user']['profile_version']);
         $this->assertSame('admin', $user->role);
 
         Http::assertSent(function (Request $request) use ($authProfile): bool {

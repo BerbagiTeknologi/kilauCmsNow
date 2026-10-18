@@ -79,6 +79,14 @@
                             </span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <?php if($authUser?->role === 'admin'): ?>
+                                <li>
+                                    <a class="dropdown-item" href="<?php echo e(route('dashboard')); ?>">
+                                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard Admin
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                            <?php endif; ?>
                             <li>
                                 <a class="dropdown-item" href="<?php echo e(route('getDataUsersProfile')); ?>">
                                     <i class="fas fa-user me-1"></i> Profile Anda

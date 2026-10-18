@@ -17,6 +17,49 @@ class DonationIdentityService
 
     public function __construct(private readonly GuestDonorProfileService $profileService) {}
 
+    public function autofillProfile(Request $request): ?array
+    {
+        $user = $request->user();
+
+        if ($user) {
+            $authProfile = $request->session()->get('auth_service_user');
+            $authProfile = is_array($authProfile) ? $authProfile : [];
+
+            return [
+                'source' => DonasiKilau::DONOR_SOURCE_KILAU_AUTH,
+                'data' => [
+                    'nama' => $authProfile['name'] ?? $user->name,
+                    'email' => $authProfile['email'] ?? $user->email,
+                    'no_hp' => $authProfile['phone']
+                        ?? $authProfile['no_hp']
+                        ?? $authProfile['phone_number']
+                        ?? null,
+                ],
+            ];
+        }
+
+        $guestId = trim((string) $request->cookie(self::COOKIE_NAME));
+
+        if (! Str::isUuid($guestId)) {
+            return null;
+        }
+
+        $guest = CmsGuestDonor::query()->find($guestId);
+
+        if (! $guest || ! $guest->is_active || $guest->anonymized_at !== null) {
+            return null;
+        }
+
+        return [
+            'source' => DonasiKilau::DONOR_SOURCE_KILAU_CMS,
+            'data' => [
+                'nama' => $guest->name,
+                'email' => $guest->email,
+                'no_hp' => $guest->no_hp,
+            ],
+        ];
+    }
+
     public function resolve(Request $request, array $profile): array
     {
         if ($request->boolean('is_anonymous')) {

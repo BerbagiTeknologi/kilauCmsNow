@@ -68,10 +68,14 @@ Route::get('/get-users', [LoginController::class, 'getDataUsersProfile'])
 Route::patch('/get-users', [LoginController::class, 'updateDataUsersProfile'])
     ->middleware('auth.local')
     ->name('profile.update');
-Route::post('/loginprosess', [LoginController::class, 'loginProses'])->name('loginProses');
+Route::post('/loginprosess', [LoginController::class, 'loginProses'])
+    ->middleware('throttle:10,1')
+    ->name('loginProses');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/register', [LoginController::class, 'register'])->name('register');
-Route::post('/register', [LoginController::class, 'registerProses'])->name('register.store');
+Route::post('/register', [LoginController::class, 'registerProses'])
+    ->middleware('throttle:5,1')
+    ->name('register.store');
 
 Route::get('/dashboardkilau', [DashboardLoginController::class, 'dashboardLogin'])->name('dashboardlogin');
 Route::get('/dashboardkilauwebsite', [DashboardLoginController::class, 'dashboardWebsite'])->name('dashboardWebsite');
@@ -209,6 +213,7 @@ Route::post('/track-donasi-modal-program', [HomeController::class, 'trackDonasiM
      ->name('track.donasi.modalprogram');
      
 Route::get('/donasi/cek-donatur', [HomeController::class, 'cekDonatur'])
+    ->middleware('throttle:10,1')
     ->name('donasi.cek-donatur');
 
 

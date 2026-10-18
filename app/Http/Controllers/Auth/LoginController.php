@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\UpdateCmsProfileRequest;
 use App\Models\DonasiHistory;
 use App\Models\DonasiKilau;
@@ -15,8 +17,9 @@ use App\Services\ReferralCodeService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
@@ -30,16 +33,13 @@ class LoginController extends Controller
     }
 
     public function loginProses(
-        Request $request,
+        LoginRequest $request,
         AuthServiceClient $authServiceClient,
         LocalAuthUserService $localAuthUserService,
         LocalUserSession $localSession
     )
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+        $credentials = $request->validated();
 
         try {
             $authData = $authServiceClient->login(
@@ -49,14 +49,14 @@ class LoginController extends Controller
             );
         } catch (AuthenticationException $e) {
             return back()
-                ->withErrors(['email' => $e->getMessage()])
+                ->withErrors(['auth' => $e->getMessage()])
                 ->onlyInput('email');
         }
 
         $authUser = $authData['user'] ?? null;
         $globalUserId = is_array($authUser) ? $this->globalUserId($authUser) : null;
 
-        if (!is_array($authUser) || !$globalUserId || empty($authUser['email'])) {
+        if (!is_array($authUser) || !$globalUserId || empty($authUser['email']) || empty($authData['access_token'])) {
             return back()
                 ->withErrors(['email' => 'Payload user dari layanan auth tidak valid.'])
                 ->onlyInput('email');
@@ -68,6 +68,31 @@ class LoginController extends Controller
         ]);
 
         $user = $localAuthUserService->syncFromAuthService($authUser, $mappingLookup);
+
+        if (is_array($mappingLookup)
+            && empty($mappingLookup['mappings'])
+            && $user->role === 'user'
+            && $authServiceClient->hasInternalKey()
+        ) {
+            try {
+                $mappingLookup = $authServiceClient->upsertMapping([
+                    'global_user_id' => $globalUserId,
+                    'app_name' => config('auth_service.app_name', 'kilauCms'),
+                    'local_database' => config('auth_service.local_database'),
+                    'local_user_table' => config('auth_service.local_user_table', 'users'),
+                    'local_user_id' => (string) $user->id,
+                    'email' => strtolower($credentials['email']),
+                    'mapping_source' => 'login',
+                    'metadata' => ['role' => 'user'],
+                ]);
+                $user = $localAuthUserService->syncFromAuthService($authUser, $mappingLookup);
+            } catch (AuthenticationException | ValidationException $e) {
+                Log::warning('Mapping CMS ke SSO belum berhasil dipulihkan saat login.', [
+                    'global_user_id' => $globalUserId,
+                    'exception' => $e,
+                ]);
+            }
+        }
 
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
@@ -242,50 +267,41 @@ class LoginController extends Controller
     }
 
     public function registerProses(
-        Request $request,
+        RegisterRequest $request,
         AuthServiceClient $authServiceClient,
         LocalAuthUserService $localAuthUserService,
         LocalUserSession $localSession
     )
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
-
-        if (!$authServiceClient->canUseInternalApi()) {
-            return back()
-                ->withErrors(['email' => 'Internal service key CMS belum valid atau layanan auth tidak tersedia.'])
-                ->onlyInput('name', 'email');
-        }
+        $validated = $request->validated();
 
         try {
             $authData = $authServiceClient->register(
                 $validated['name'],
                 strtolower($validated['email']),
                 $validated['password'],
-                $request->string('password_confirmation')->toString(),
+                $validated['password_confirmation'],
                 'kilauCms-web'
             );
         } catch (AuthenticationException $e) {
             return back()
-                ->withErrors(['email' => $e->getMessage()])
+                ->withErrors(['auth' => $e->getMessage()])
                 ->onlyInput('name', 'email');
         }
 
         $authUser = $authData['user'] ?? null;
         $globalUserId = is_array($authUser) ? $this->globalUserId($authUser) : null;
 
-        if (!is_array($authUser) || !$globalUserId || empty($authUser['email'])) {
-            return back()
-                ->withErrors(['email' => 'Payload user dari layanan auth tidak valid.'])
-                ->onlyInput('name', 'email');
+        if (!is_array($authUser) || !$globalUserId || empty($authUser['email']) || empty($authData['access_token'])) {
+            Log::error('Registrasi SSO berhasil, tetapi respons user tidak valid.');
+
+            return redirect()->route('login')->with('warning',
+                'Akun SSO mungkin sudah dibuat, tetapi sinkronisasi CMS belum selesai. Silakan coba login dengan email dan password yang baru didaftarkan.'
+            );
         }
 
-        $user = $localAuthUserService->syncFromAuthService($authUser);
-
         try {
+            $user = $localAuthUserService->syncFromAuthService($authUser);
             $mappingLookup = $authServiceClient->upsertMapping([
                 'global_user_id' => $globalUserId,
                 'app_name' => config('auth_service.app_name', 'kilauCms'),
@@ -298,13 +314,17 @@ class LoginController extends Controller
                     'role' => 'user',
                 ],
             ]);
-        } catch (AuthenticationException $e) {
-            return back()
-                ->withErrors(['email' => $e->getMessage()])
-                ->onlyInput('name', 'email');
-        }
+            $user = $localAuthUserService->syncFromAuthService($authUser, $mappingLookup);
+        } catch (\Throwable $e) {
+            Log::error('Registrasi SSO berhasil, tetapi sinkronisasi CMS gagal.', [
+                'global_user_id' => $globalUserId,
+                'exception' => $e,
+            ]);
 
-        $user = $localAuthUserService->syncFromAuthService($authUser, $mappingLookup);
+            return redirect()->route('login')->with('warning',
+                'Akun SSO sudah dibuat, tetapi sinkronisasi CMS belum selesai. Silakan login dengan email dan password yang baru didaftarkan.'
+            );
+        }
 
         Auth::login($user);
         $request->session()->regenerate();

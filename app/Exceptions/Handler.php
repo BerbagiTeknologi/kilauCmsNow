@@ -3,6 +3,8 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -41,6 +43,12 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
+        $this->renderable(function (HttpExceptionInterface $e, Request $request) {
+            if ($e->getStatusCode() === 419 && $request->isMethod('post') && $request->is('logout')) {
+                return redirect()->route('home');
+            }
+        });
+
         $this->reportable(function (Throwable $e) {
             //
         });
